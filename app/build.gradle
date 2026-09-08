@@ -18,15 +18,6 @@ android {
         multiDexEnabled true
     }
 
-    signingConfigs {
-        release {
-            storeFile file("../sobatimer.keystore")
-            storePassword "282828"
-            keyAlias "soba"
-            keyPassword "282828"
-        }
-    }
-
     buildTypes {
         release {
             signingConfig signingConfigs.release   // ← これが重要
