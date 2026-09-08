@@ -1,0 +1,25 @@
+R_DEF: Internal format may change without notice
+local
+id countdownText
+id headerText
+id minA
+id minB
+id minC
+id msgA1
+id msgA2
+id msgB1
+id msgB2
+id msgC1
+id msgC2
+id resetBtn
+id saveBtn
+id settingsBtn
+id specBtn
+id specText
+id startBtn
+id stopBtn
+id timerText
+layout activity_main
+layout activity_settings
+layout activity_spec
+mipmap ic_launcher

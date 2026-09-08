@@ -1,0 +1,67 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.example.sobatimer'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.example.sobatimer"
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+
+        // TextToSpeech などで必要
+        multiDexEnabled true
+    }
+
+    signingConfigs {
+        release {
+            storeFile file("../sobatimer.keystore")
+            storePassword "282828"
+            keyAlias "soba"
+            keyPassword "282828"
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release   // ← これが重要
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
+                    'proguard-rules.pro'
+        }
+        debug {
+            // デバッグ版はそのまま
+        }
+    }
+
+    // ★ APK の出力名を自動変更（重要）
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            outputFileName = "SobaTimer-${variant.name}.apk"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+
+    // TextToSpeech は標準ライブラリでOK（追加不要）
+}

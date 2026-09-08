@@ -1,0 +1,4 @@
+#Mon Sep 07 06:16:03 GMT 2026
+base.0=/workspace/sobatimer/app/build/intermediates/dex/release/mergeDexRelease/classes.dex
+renamed.0=classes.dex
+path.0=classes.dex
