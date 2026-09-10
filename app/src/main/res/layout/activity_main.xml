@@ -12,7 +12,7 @@
         android:text="開始"
         android:textSize="24sp"
         android:textColor="#FFFFFF"
-        android:background="#444444"
+        android:background="@drawable/btn_bg"
         android:padding="12dp"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
@@ -49,11 +49,12 @@
         android:layout_height="wrap_content"
         android:text="設定"
         android:textSize="24sp"
+        android:background="@drawable/btn_bg"
+        android:textColor="#FFFFFF"
+        android:padding="12dp"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
-        android:layout_margin="24dp"
-        android:background="#444444"
-        android:textColor="#FFFFFF" />
+        android:layout_margin="24dp" />
 
     <!-- 仕様ボタン（右下） -->
     <Button
@@ -62,11 +63,12 @@
         android:layout_height="wrap_content"
         android:text="仕様"
         android:textSize="24sp"
+        android:background="@drawable/btn_bg"
+        android:textColor="#FFFFFF"
+        android:padding="12dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
-        android:layout_margin="24dp"
-        android:background="#444444"
-        android:textColor="#FFFFFF" />
+        android:layout_margin="24dp" />
 
     <!-- 終了ボタン（左下） -->
     <Button
@@ -75,10 +77,11 @@
         android:layout_height="wrap_content"
         android:text="終了"
         android:textSize="24sp"
+        android:background="@drawable/btn_bg"
+        android:textColor="#FFFFFF"
+        android:padding="12dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true"
-        android:layout_margin="24dp"
-        android:background="#444444"
-        android:textColor="#FFFFFF" />
+        android:layout_margin="24dp" />
 
 </RelativeLayout>

@@ -1,7 +1,8 @@
 // ------------------------------------------------------------
 // MainActivity.kt
 // 作成日: 2026-09-07
-// Ver: 1.0
+// 変更日: 2026-09-10
+// Ver: 1.1（時刻差分方式・レスポンシブ対）
 // ------------------------------------------------------------
 
 package com.example.sobatimer
@@ -14,22 +15,22 @@ import android.speech.tts.TextToSpeech
 import android.widget.Button
 import android.widget.TextView
 import android.content.Intent
+import android.util.TypedValue
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AlertDialog
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
-    // ------------------------------------------------------------
-    // 変数定義
-    // ------------------------------------------------------------
     private lateinit var tts: TextToSpeech
     private lateinit var timerText: TextView
     private lateinit var countdownText: TextView
 
     private val handler = Handler(Looper.getMainLooper())
+
     private var seconds = 0
     private var isRunning = false
+    private var startTime: Long = 0L
 
     private var minA = 600
     private var minB = 1200
@@ -45,9 +46,6 @@ class MainActivity : AppCompatActivity() {
     private var msgC2 = "30分経過です"
 
 
-    // ------------------------------------------------------------
-    // onCreate（初期化）
-    // ------------------------------------------------------------
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -61,39 +59,82 @@ class MainActivity : AppCompatActivity() {
 
         tts = TextToSpeech(this) { tts.language = Locale.JAPANESE }
 
-        // ★ 開始ボタン
-        findViewById<Button>(R.id.startBtn).setOnClickListener {
-            findViewById<Button>(R.id.startBtn).isEnabled = false
+        val startBtn = findViewById<Button>(R.id.startBtn)
+        val stopBtn = findViewById<Button>(R.id.stopBtn)
+        val settingsBtn = findViewById<Button>(R.id.settingsBtn)
+        val specBtn = findViewById<Button>(R.id.specBtn)
+
+        // ------------------------------------------------------------
+        // ★ レスポンシブ対応（画面サイズに応じて4隅に配置）
+        // ------------------------------------------------------------
+        startBtn.post {
+            val root = startBtn.rootView
+            val w = root.width.toFloat()
+            val h = root.height.toFloat()
+
+            startBtn.x = w * 0.05f
+            startBtn.y = h * 0.05f
+
+            settingsBtn.x = w * 0.80f
+            settingsBtn.y = h * 0.05f
+
+            stopBtn.x = w * 0.05f
+            stopBtn.y = h * 0.80f
+
+            specBtn.x = w * 0.80f
+            specBtn.y = h * 0.80f
+
+            // ------------------------------------------------------------
+            // ★ 最小限の修正：巨大フォント（scaledDensity → applyDimension）
+            // ------------------------------------------------------------
+            val px = h * 0.25f
+            val sp = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_SP,
+                px,
+                resources.displayMetrics
+            )
+            timerText.setTextSize(TypedValue.COMPLEX_UNIT_PX, sp)
+        }
+
+        // ------------------------------------------------------------
+        // ★ 開始ボタン（iOS版と完全一致）
+        // ------------------------------------------------------------
+        startBtn.setOnClickListener {
+            seconds = 0
+            timerText.text = "00:00"
+            timerText.setTextColor(Color.WHITE)
+
+            handler.removeCallbacksAndMessages(null)
+            isRunning = false
+            startTime = 0L
+
+            startBtn.isEnabled = false
+
             speakTwice("準備が整ったようですので開始します", "")
             startCountdown()
         }
 
-        findViewById<Button>(R.id.settingsBtn).setOnClickListener {
+        settingsBtn.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
 
-        findViewById<Button>(R.id.specBtn).setOnClickListener {
+        specBtn.setOnClickListener {
             startActivity(Intent(this, SpecActivity::class.java))
         }
 
-        // ★ 終了ボタン（確認ダイアログ）
-        findViewById<Button>(R.id.stopBtn).setOnClickListener {
+        stopBtn.setOnClickListener {
             AlertDialog.Builder(this)
                 .setTitle("確認")
                 .setMessage("タイマーを終了しますか？")
                 .setPositiveButton("終了") { _, _ ->
                     stopTimerAndShowElapsed()
-                    findViewById<Button>(R.id.startBtn).isEnabled = true
+                    startBtn.isEnabled = true
                 }
                 .setNegativeButton("キャンセル", null)
                 .show()
         }
     }
 
-
-    // ------------------------------------------------------------
-    // 設定ロード
-    // ------------------------------------------------------------
     override fun onResume() {
         super.onResume()
         loadSettings()
@@ -115,10 +156,6 @@ class MainActivity : AppCompatActivity() {
         msgC2 = pref.getString("msgC2", "30分経過です")!!
     }
 
-
-    // ------------------------------------------------------------
-    // 音声処理（2回読み上げ）
-    // ------------------------------------------------------------
     private fun speakTwice(first: String, second: String) {
         tts.speak(first, TextToSpeech.QUEUE_FLUSH, null, null)
 
@@ -133,14 +170,9 @@ class MainActivity : AppCompatActivity() {
         }, delay)
     }
 
-
-    // ------------------------------------------------------------
-    // カウントダウン処理
-    // ------------------------------------------------------------
     private fun startCountdown() {
         var count = 5
         countdownText.text = "開始まで: $count"
-        timerText.setTextColor(Color.WHITE)
 
         handler.post(object : Runnable {
             override fun run() {
@@ -164,13 +196,10 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-
-    // ------------------------------------------------------------
-    // タイマー処理
-    // ------------------------------------------------------------
     private fun startTimer() {
+
         isRunning = true
-        seconds = 0
+        startTime = System.currentTimeMillis()
 
         val messages = mapOf(
             minA to Pair(msgA1, msgA2),
@@ -195,10 +224,12 @@ class MainActivity : AppCompatActivity() {
             override fun run() {
                 if (!isRunning) return
 
+                val now = System.currentTimeMillis()
+                seconds = ((now - startTime) / 1000).toInt()
+
                 val min = seconds / 60
                 val sec = seconds % 60
 
-                // ★ 40分経過した瞬間だけ赤にする
                 if (seconds == 2400) {
                     timerText.setTextColor(Color.RED)
                 }
@@ -209,16 +240,11 @@ class MainActivity : AppCompatActivity() {
                     speakTwice(first, second)
                 }
 
-                seconds++
                 handler.postDelayed(this, 1000)
             }
         })
     }
 
-
-    // ------------------------------------------------------------
-    // 終了処理
-    // ------------------------------------------------------------
     private fun stopTimerAndShowElapsed() {
         isRunning = false
         handler.removeCallbacksAndMessages(null)
@@ -230,10 +256,6 @@ class MainActivity : AppCompatActivity() {
         timerText.text = String.format("%02d:%02d", min, sec)
     }
 
-
-    // ------------------------------------------------------------
-    // 終了時クリーンアップ
-    // ------------------------------------------------------------
     override fun onDestroy() {
         tts.shutdown()
         super.onDestroy()
