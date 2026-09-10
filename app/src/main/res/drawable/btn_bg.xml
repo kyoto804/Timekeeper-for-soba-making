@@ -6,10 +6,12 @@
 
     <corners android:radius="16dp"/>
 
-    <!-- ★ 上下を短くする（8dp → 1dp） -->
+    <!-- ============================================================ -->
+    <!-- ★ 上下を短くする（8dp → 2dp） -->
+    <!-- ============================================================ -->
     <padding
         android:left="12dp"
-        android:top="0dp"
+        android:top="2dp"
         android:right="12dp"
-        android:bottom="0dp"/>
+        android:bottom="2dp"/>
 </shape>

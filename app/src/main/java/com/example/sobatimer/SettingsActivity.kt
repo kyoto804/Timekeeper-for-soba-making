@@ -1,8 +1,8 @@
-// ------------------------------------------------------------
+// -----------------------------------------------------------
 // SettingsActivity.kt
 // 作成日: 2026-09-07
 // Ver: 1.0
-// ------------------------------------------------------------
+// -----------------------------------------------------------
 
 package com.example.sobatimer
 
@@ -13,16 +13,16 @@ import androidx.appcompat.app.AppCompatActivity
 
 class SettingsActivity : AppCompatActivity() {
 
-    // ------------------------------------------------------------
+    // -----------------------------------------------------------
     // onCreate（初期化）
-    // ------------------------------------------------------------
+    // -----------------------------------------------------------
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
 
-        // ------------------------------------------------------------
+        // -----------------------------------------------------------
         // UI 要素取得
-        // ------------------------------------------------------------
+        // -----------------------------------------------------------
         val minA = findViewById<EditText>(R.id.minA)
         val minB = findViewById<EditText>(R.id.minB)
         val minC = findViewById<EditText>(R.id.minC)
@@ -38,9 +38,9 @@ class SettingsActivity : AppCompatActivity() {
 
         val pref = getSharedPreferences("settings", MODE_PRIVATE)
 
-        // ------------------------------------------------------------
+        // -----------------------------------------------------------
         // 現在の設定値を表示
-        // ------------------------------------------------------------
+        // -----------------------------------------------------------
         minA.setText(pref.getInt("minA", 600).toString())
         minB.setText(pref.getInt("minB", 1200).toString())
         minC.setText(pref.getInt("minC", 1800).toString())
@@ -54,11 +54,10 @@ class SettingsActivity : AppCompatActivity() {
         msgC1.setText(pref.getString("msgC1", "30分経過"))
         msgC2.setText(pref.getString("msgC2", "30分経過です"))
 
-        // ------------------------------------------------------------
+        // -----------------------------------------------------------
         // 保存ボタン
-        // ------------------------------------------------------------
+        // -----------------------------------------------------------
         findViewById<Button>(R.id.saveBtn).setOnClickListener {
-
             pref.edit().apply {
                 putInt("minA", minA.text.toString().toIntOrNull() ?: 600)
                 putInt("minB", minB.text.toString().toIntOrNull() ?: 1200)
@@ -75,15 +74,13 @@ class SettingsActivity : AppCompatActivity() {
 
                 apply()
             }
-
             finish()
         }
 
-        // ------------------------------------------------------------
+        // -----------------------------------------------------------
         // 初期値に戻すボタン
-        // ------------------------------------------------------------
+        // -----------------------------------------------------------
         findViewById<Button>(R.id.resetBtn).setOnClickListener {
-
             pref.edit().apply {
                 putInt("minA", 600)
                 putInt("minB", 1200)

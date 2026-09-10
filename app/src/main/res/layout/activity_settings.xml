@@ -11,7 +11,9 @@
         android:layout_height="wrap_content"
         android:background="#000000">
 
+        <!-- ============================================================ -->
         <!-- ★ 上部に説明文を表示 -->
+        <!-- ============================================================ -->
         <TextView
             android:id="@+id/headerText"
             android:layout_width="match_parent"
@@ -21,7 +23,10 @@
             android:textSize="18sp"
             android:paddingBottom="20dp"
             android:background="#000000"/>
+
+        <!-- ============================================================ -->
         <!-- ★ セット1 -->
+        <!-- ============================================================ -->
         <EditText
             android:id="@+id/minA"
             android:hint="秒数（例：600）"
@@ -44,7 +49,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
+        <!-- ============================================================ -->
         <!-- ★ セット2 -->
+        <!-- ============================================================ -->
         <EditText
             android:id="@+id/minB"
             android:hint="秒数（例：1200）"
@@ -67,7 +74,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
+        <!-- ============================================================ -->
         <!-- ★ セット3 -->
+        <!-- ============================================================ -->
         <EditText
             android:id="@+id/minC"
             android:hint="秒数（例：1800）"
@@ -89,13 +98,18 @@
             android:textColor="#FFFFFF"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
+
+        <!-- ============================================================ -->
         <!-- 下に余白 -->
+        <!-- ============================================================ -->
         <View
             android:layout_width="match_parent"
             android:layout_height="80dp"
             android:background="#000000"/>
-            
+
+        <!-- ============================================================ -->
         <!-- 保存 -->
+        <!-- ============================================================ -->
         <Button
             android:id="@+id/saveBtn"
             android:text="保存"
@@ -106,7 +120,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
+        <!-- ============================================================ -->
         <!-- 初期値に戻す -->
+        <!-- ============================================================ -->
         <Button
             android:id="@+id/resetBtn"
             android:text="初期値に戻す"

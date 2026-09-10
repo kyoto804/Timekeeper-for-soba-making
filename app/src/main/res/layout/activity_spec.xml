@@ -5,6 +5,9 @@
     android:background="#000000"
     android:padding="24dp">
 
+    <!-- ============================================================ -->
+    <!-- ★ 仕様テキスト表示領域 -->
+    <!-- ============================================================ -->
     <TextView
         android:id="@+id/specText"
         android:layout_width="match_parent"
