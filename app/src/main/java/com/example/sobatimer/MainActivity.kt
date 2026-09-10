@@ -23,9 +23,7 @@ import android.view.View
 
 class MainActivity : AppCompatActivity() {
 
-    // -----------------------------------------------------------
     // 変数定義
-    // -----------------------------------------------------------
     private lateinit var tts: TextToSpeech
     private lateinit var timerText: TextView
     private lateinit var countdownText: TextView
@@ -43,9 +41,7 @@ class MainActivity : AppCompatActivity() {
     private var msgC1 = "30分経過"
     private var msgC2 = "30分経過です"
 
-    // -----------------------------------------------------------
     // onCreate（初期化）
-    // -----------------------------------------------------------
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -69,9 +65,7 @@ class MainActivity : AppCompatActivity() {
         val settingsBtn = findViewById<Button>(R.id.settingsBtn)
         val specBtn = findViewById<Button>(R.id.specBtn)
 
-        // -----------------------------------------------------------
         // ★ レスポンシブ対応（画面サイズに応じて4隅に配置）
-        // -----------------------------------------------------------
         startBtn.post {
             val root = startBtn.rootView
             val w = root.width.toFloat()
@@ -96,9 +90,9 @@ class MainActivity : AppCompatActivity() {
             timerText.setTextSize(TypedValue.COMPLEX_UNIT_PX, sp)
         }
 
-        // -----------------------------------------------------------
+    
         // ★ 開始ボタン（iOS版と完全一致）
-        // -----------------------------------------------------------
+    
         startBtn.setOnClickListener {
             seconds = 0
             timerText.text = "00:00"
@@ -133,9 +127,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // -----------------------------------------------------------
     // 設定ロード
-    // -----------------------------------------------------------
     override fun onResume() {
         super.onResume()
         loadSettings()
@@ -154,9 +146,7 @@ class MainActivity : AppCompatActivity() {
         msgC2 = pref.getString("msgC2", "30分経過です")!!
     }
 
-    // -----------------------------------------------------------
     // 音声処理（2回読み上げ）
-    // -----------------------------------------------------------
     private fun speakTwice(first: String, second: String) {
         tts.speak(first, TextToSpeech.QUEUE_FLUSH, null, null)
         val delay = when {
@@ -169,9 +159,7 @@ class MainActivity : AppCompatActivity() {
         }, delay)
     }
 
-    // -----------------------------------------------------------
     // カウントダウン処理
-    // -----------------------------------------------------------
     private fun startCountdown() {
         var count = 5
         countdownText.text = "開始まで: $count"
@@ -195,9 +183,7 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    // -----------------------------------------------------------
     // タイマー処理
-    // -----------------------------------------------------------
     private fun startTimer() {
         isRunning = true
         startTime = System.currentTimeMillis()
@@ -226,14 +212,17 @@ class MainActivity : AppCompatActivity() {
                 if (seconds == 2400) timerText.setTextColor(Color.RED)
                 timerText.text = String.format("%02d:%02d", min, sec)
                 messages[seconds]?.let { (first, second) -> speakTwice(first, second) }
+                // ★ 60分で停止
+                if (seconds >= 3600) {
+                    isRunning = false
+                    return
+                }                
                 handler.postDelayed(this, 1000)
             }
         })
     }
 
-    // -----------------------------------------------------------
     // 終了処理
-    // -----------------------------------------------------------
     private fun stopTimerAndShowElapsed() {
         isRunning = false
         handler.removeCallbacksAndMessages(null)
@@ -243,9 +232,7 @@ class MainActivity : AppCompatActivity() {
         timerText.text = String.format("%02d:%02d", min, sec)
     }
 
-    // -----------------------------------------------------------
     // 終了時クリーンアップ
-    // -----------------------------------------------------------
     override fun onDestroy() {
         tts.shutdown()
         super.onDestroy()
