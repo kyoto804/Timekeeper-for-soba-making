@@ -1,25 +1,30 @@
 // -----------------------------------------------------------
 // MainActivity.kt
 // 作成日: 2026-09-07
-// 変更日: 2026-09-10
-// Ver: 1.1（時刻差分方式・レスポンシブ対応・バナー削除）
+// 変更日: 2026-09-11
+// Ver: 1.2（時刻差分方式・レスポンシブ対応・Foreground Service・3600秒停止対応）
 // -----------------------------------------------------------
 
 package com.example.sobatimer
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.speech.tts.TextToSpeech
+import android.util.TypedValue
+import android.view.View
 import android.widget.Button
 import android.widget.TextView
-import android.content.Intent
-import android.util.TypedValue
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import java.util.Locale
-import android.view.View
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,10 +32,16 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tts: TextToSpeech
     private lateinit var timerText: TextView
     private lateinit var countdownText: TextView
+    private lateinit var startBtn: Button
+    private lateinit var stopBtn: Button
+    private lateinit var settingsBtn: Button
+    private lateinit var specBtn: Button
+
     private val handler = Handler(Looper.getMainLooper())
     private var seconds = 0
     private var isRunning = false
     private var startTime: Long = 0L
+
     private var minA = 600
     private var minB = 1200
     private var minC = 1800
@@ -58,12 +69,24 @@ class MainActivity : AppCompatActivity() {
         countdownText = findViewById(R.id.countdownText)
         loadSettings()
 
+        // Android 13（API 33）以上の通知権限チェック
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    101
+                )
+            }
+        }
+
         tts = TextToSpeech(this) { tts.language = Locale.JAPANESE }
 
-        val startBtn = findViewById<Button>(R.id.startBtn)
-        val stopBtn = findViewById<Button>(R.id.stopBtn)
-        val settingsBtn = findViewById<Button>(R.id.settingsBtn)
-        val specBtn = findViewById<Button>(R.id.specBtn)
+        startBtn = findViewById(R.id.startBtn)
+        stopBtn = findViewById(R.id.stopBtn)
+        settingsBtn = findViewById(R.id.settingsBtn)
+        specBtn = findViewById(R.id.specBtn)
 
         // ★ レスポンシブ対応（画面サイズに応じて4隅に配置）
         startBtn.post {
@@ -90,9 +113,7 @@ class MainActivity : AppCompatActivity() {
             timerText.setTextSize(TypedValue.COMPLEX_UNIT_PX, sp)
         }
 
-    
-        // ★ 開始ボタン（iOS版と完全一致）
-    
+        // ★ 開始ボタン
         startBtn.setOnClickListener {
             seconds = 0
             timerText.text = "00:00"
@@ -120,7 +141,6 @@ class MainActivity : AppCompatActivity() {
                 .setMessage("タイマーを終了しますか？")
                 .setPositiveButton("終了") { _, _ ->
                     stopTimerAndShowElapsed()
-                    startBtn.isEnabled = true
                 }
                 .setNegativeButton("キャンセル", null)
                 .show()
@@ -187,6 +207,17 @@ class MainActivity : AppCompatActivity() {
     private fun startTimer() {
         isRunning = true
         startTime = System.currentTimeMillis()
+
+        // ★ フォアグラウンドサービスの開始
+        val serviceIntent = Intent(this, TimerService::class.java).apply {
+            action = TimerService.ACTION_START
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent)
+        } else {
+            startService(serviceIntent)
+        }
+
         val messages = mapOf(
             minA to Pair(msgA1, msgA2),
             minB to Pair(msgB1, msgB2),
@@ -202,21 +233,27 @@ class MainActivity : AppCompatActivity() {
             2400 to Pair("終了", "終了です"),
             3600 to Pair("60分経過しました。終了します。", "お疲れさまでした")
         )
+
         handler.post(object : Runnable {
             override fun run() {
                 if (!isRunning) return
                 val now = System.currentTimeMillis()
                 seconds = ((now - startTime) / 1000).toInt()
+
                 val min = seconds / 60
                 val sec = seconds % 60
+
                 if (seconds == 2400) timerText.setTextColor(Color.RED)
                 timerText.text = String.format("%02d:%02d", min, sec)
+
                 messages[seconds]?.let { (first, second) -> speakTwice(first, second) }
-                // ★ 60分で停止
+
+                // ★ 60分（3600秒）で確実にサービス停止＆ダイアログなし終了
                 if (seconds >= 3600) {
-                    isRunning = false
+                    stopTimerAndShowElapsed()
                     return
-                }                
+                }
+
                 handler.postDelayed(this, 1000)
             }
         })
@@ -226,10 +263,20 @@ class MainActivity : AppCompatActivity() {
     private fun stopTimerAndShowElapsed() {
         isRunning = false
         handler.removeCallbacksAndMessages(null)
+
+        // ★ フォアグラウンドサービスの停止
+        val serviceIntent = Intent(this, TimerService::class.java).apply {
+            action = TimerService.ACTION_STOP
+        }
+        startService(serviceIntent)
+
         val min = seconds / 60
         val sec = seconds % 60
         timerText.setTextColor(Color.GREEN)
         timerText.text = String.format("%02d:%02d", min, sec)
+
+        // ボタンの再有効化
+        startBtn.isEnabled = true
     }
 
     // 終了時クリーンアップ
