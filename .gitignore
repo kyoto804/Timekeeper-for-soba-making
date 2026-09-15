@@ -1,27 +1,36 @@
+# ============================================================
 # Gradle / Build System
-.gradle/
-build/
-app/build/
-local.properties
+# ============================================================
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
 
+# ============================================================
 # Android build outputs
+# ============================================================
 *.apk
 *.aab
 *.dex
 *.class
 *.iml
 
+# ============================================================
 # Intermediates（大量に生成されるので除外）
-app/build/intermediates/
-app/build/outputs/
-app/build/tmp/
+android/app/build/intermediates/
+android/app/build/outputs/
+android/app/build/tmp/
 
+# ============================================================
 # IDE / Editor
+# ============================================================
 .idea/
 *.log
 
+# ============================================================
 # Keystore（絶対に公開しない）
-sobatimer.keystore
+android/sobatimer.keystore
 
+# ============================================================
 # app/build.gradle（公開しない）
-app/build.gradle
+android/app/build.gradle
