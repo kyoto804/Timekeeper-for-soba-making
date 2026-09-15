@@ -118,17 +118,7 @@ struct ContentView: View {
             }
             .onReceive(timer) { _ in tick() }
             // タイマー表示時は「横」
-            .onAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    rotationLock.lockLandscape()
-                }
-            }
-            // 他画面へ移動時は「縦」
-            .onDisappear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    rotationLock.lockPortrait()
-                }
-            }
+            .onAppear {rotationLock.lockLandscape()}
             // バー類の完全非表示
             .toolbar(.hidden, for: .navigationBar)
             .statusBarHidden(true)
@@ -343,8 +333,7 @@ struct SettingsView: View {
         .background(Color.black)
         .navigationTitle("設定")
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .onAppear { rotationLock.lockPortrait() }      // 設定画面を開いたら「縦」
-        .onDisappear { rotationLock.lockLandscape() }  // タイマー画面へ戻る時は「横」
+          .onAppear { rotationLock.lockPortrait() }      // 設定画面を開いたら「縦」
     }
 
     func saveSettings() {}
@@ -411,8 +400,7 @@ kyoto.naruto@gmail.com へ連絡ください。
         .background(Color.black)
         .navigationTitle("仕様")
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .onAppear { rotationLock.lockPortrait() }      // 仕様画面を開いたら「縦」
-        .onDisappear { rotationLock.lockLandscape() }  // タイマー画面へ戻る時は「横」
+          .onAppear { rotationLock.lockPortrait() }      // 仕様画面を開いたら「縦」
     }
 }
 

@@ -34,3 +34,7 @@ android/sobatimer.keystore
 # ============================================================
 # app/build.gradle（公開しない）
 android/app/build.gradle
+# iOS
+*:Zone.Identifier
+*com.apple.lastuseddate*
+*com.apple.metadata*
