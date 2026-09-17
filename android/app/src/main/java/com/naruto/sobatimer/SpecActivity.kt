@@ -5,7 +5,7 @@
 // Ver: 1.1
 // -----------------------------------------------------------
 
-package com.example.sobatimer
+package com.naruto.sobatimer
 
 import android.os.Bundle
 import android.widget.TextView

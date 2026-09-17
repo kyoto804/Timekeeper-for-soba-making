@@ -4,7 +4,7 @@
 // Ver: 1.0
 // -----------------------------------------------------------
 
-package com.example.sobatimer
+package com.naruto.sobatimer
 
 import android.os.Bundle
 import android.widget.Button

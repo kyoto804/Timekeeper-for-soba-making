@@ -6,7 +6,7 @@
 // Ver: 1.1（警告ゼロ・WindowInsetsController対応・3600秒停止・短いコメント統一）
 // -----------------------------------------------------------
 
-package com.example.sobatimer
+package com.naruto.sobatimer
 
 import android.Manifest
 import android.content.Intent

@@ -4,7 +4,7 @@
 // Ver: 1.1（Android 14 / Foreground Service Media Playback対応）
 // -----------------------------------------------------------
 
-package com.example.sobatimer
+package com.naruto.sobatimer
 
 import android.app.Notification
 import android.app.NotificationChannel
