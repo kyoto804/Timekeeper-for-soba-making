@@ -2,19 +2,34 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000"
-    android:padding="24dp"
-    android:paddingTop="48dp">
+    android:background="#000000">
 
-    <!-- ============================================================ -->
-    <!-- ★ 仕様テキスト表示領域 -->
-    <!-- ============================================================ -->
-    <TextView
-        android:id="@+id/specText"
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="24dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="#FFFFFF"
-        android:textSize="18sp"
-        android:text="仕様一覧を読み込み中…" />
+        android:background="#000000">
+
+        <!-- ============================================================ -->
+        <!-- ★ 上余白（確実にスペースを作るためのダミービュー） -->
+        <!-- ============================================================ -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="#000000" />
+
+        <!-- ============================================================ -->
+        <!-- ★ 仕様テキスト表示領域 -->
+        <!-- ============================================================ -->
+        <TextView
+            android:id="@+id/specText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:text="仕様一覧を読み込み中…" />
+
+    </LinearLayout>
 
 </ScrollView>

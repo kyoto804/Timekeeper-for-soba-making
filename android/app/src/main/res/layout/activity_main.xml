@@ -1,23 +1,25 @@
 <?xml version="1.1" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000000">
 
     <!-- ============================================================ -->
-    <!-- ★ 開始ボタン（位置は Kotlin 側で設定） -->
+    <!-- ★ 開始ボタン（青・角丸） -->
     <!-- ============================================================ -->
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/startBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="110dp"
+        android:layout_height="70dp"
         android:text="開始"
         android:textSize="24sp"
         android:textColor="#FFFFFF"
-        android:background="@drawable/btn_bg_start" />
+        app:backgroundTint="#0066FF"
+        app:cornerRadius="16dp" />
 
     <!-- ============================================================ -->
-    <!-- カウントダウン -->
+    <!-- ★ カウントダウン表示 -->
     <!-- ============================================================ -->
     <TextView
         android:id="@+id/countdownText"
@@ -29,7 +31,7 @@
         android:layout_centerHorizontal="true" />
 
     <!-- ============================================================ -->
-    <!-- 本タイマー -->
+    <!-- ★ 本タイマー表示（中央） -->
     <!-- ============================================================ -->
     <TextView
         android:id="@+id/timerText"
@@ -40,42 +42,46 @@
         android:textColor="#FFFFFF"
         android:textStyle="bold"
         android:gravity="center"
-        android:includeFontPadding="false"/>
+        android:includeFontPadding="false" />
 
     <!-- ============================================================ -->
-    <!-- 設定ボタン（位置は Kotlin 側で設定） -->
+    <!-- ★ 設定ボタン（グレー・角丸） -->
     <!-- ============================================================ -->
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/settingsBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="110dp"
+        android:layout_height="70dp"
         android:text="設定"
         android:textSize="24sp"
         android:textColor="#FFFFFF"
-        android:background="@drawable/btn_bg" />
+        android:singleLine="true"
+        app:backgroundTint="#444444"
+        app:cornerRadius="16dp" />
 
     <!-- ============================================================ -->
-    <!-- 仕様ボタン -->
+    <!-- ★ 仕様ボタン（グレー・角丸） -->
     <!-- ============================================================ -->
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/specBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="110dp"
+        android:layout_height="70dp"
         android:text="仕様"
         android:textSize="24sp"
         android:textColor="#FFFFFF"
-        android:background="@drawable/btn_bg" />
+        app:backgroundTint="#444444"
+        app:cornerRadius="16dp" />
 
     <!-- ============================================================ -->
-    <!-- 終了ボタン -->
+    <!-- ★ 終了ボタン（赤・角丸） -->
     <!-- ============================================================ -->
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/stopBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="110dp"
+        android:layout_height="70dp"
         android:text="終了"
         android:textSize="24sp"
         android:textColor="#FFFFFF"
-        android:background="@drawable/btn_bg_stop" />
+        app:backgroundTint="#FF3333"
+        app:cornerRadius="16dp" />
 
 </RelativeLayout>

@@ -38,3 +38,4 @@ android/app/build.gradle
 *:Zone.Identifier
 *com.apple.lastuseddate*
 *com.apple.metadata*
+test

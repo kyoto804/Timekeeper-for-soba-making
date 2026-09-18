@@ -27,7 +27,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import java.util.Locale
-
+import android.content.res.ColorStateList
 class MainActivity : AppCompatActivity() {
 
     // 変数
@@ -146,7 +146,6 @@ class MainActivity : AppCompatActivity() {
             stopBtn.y = h * 0.80f
             specBtn.x = w * 0.80f
             specBtn.y = h * 0.80f
-
             val px = h * 0.25f
             val sp = TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_SP,
@@ -158,13 +157,17 @@ class MainActivity : AppCompatActivity() {
 
         // ★ 開始
         startBtn.setOnClickListener {
+            if (isRunning) return@setOnClickListener  // すでに動いていたら何もしない
+
+            isRunning = true           // フラグは「動いている」にする
+            startBtn.isEnabled = false // 開始ボタンを無効化（グレーにする）
+            startBtn.text = "計測中"
+            startBtn.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#444444"))            
             seconds = 0
             timerText.text = "00:00"
             timerText.setTextColor(Color.WHITE)
             handler.removeCallbacks(timerRunnable)
-            isRunning = false
             startTime = 0L
-            startBtn.isEnabled = false
             speakTwice("準備が整ったようですので開始します", "")
             startCountdown()
         }
@@ -184,9 +187,15 @@ class MainActivity : AppCompatActivity() {
             AlertDialog.Builder(this)
                 .setTitle("確認")
                 .setMessage("タイマーを終了しますか？")
-                .setPositiveButton("終了") { _, _ -> stopTimerAndShowElapsed() }
-                .setNegativeButton("キャンセル", null)
-                .show()
+                .setPositiveButton("終了") { _, _ ->
+                   stopTimerAndShowElapsed()
+                   isRunning = false          // フラグを止める
+                   startBtn.isEnabled = true  // 開始ボタンを再び有効化（青に戻す）
+                   startBtn.text = "開始"
+                   startBtn.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#0066FF"))
+                 }
+                   .setNegativeButton("キャンセル", null)
+                  .show()
         }
     }
 
