@@ -3,7 +3,7 @@
 //  SobaTimerApp
 //
 //  Created by hiroshi on 2026/09/13.
-//
+//monospacedDigit
 import SwiftUI
 import AVFoundation
 import Combine
@@ -35,7 +35,11 @@ struct ContentView: View {
     @AppStorage("minC") private var minC = 1800
     @AppStorage("msgC1") private var msgC1 = "30分経過"
     @AppStorage("msgC2") private var msgC2 = "30分経過です"
-
+    
+    @AppStorage("countdownSec") private var countdownSec = 5
+    @AppStorage("voiceEnabled") private var voiceEnabled = true
+    @AppStorage("timerFontSize") private var timerFontSize = 100
+    
     @StateObject private var speechManager = SpeechManager()
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -106,12 +110,13 @@ struct ContentView: View {
                         }
 
                         Text(timeString(seconds))
-                            .font(.system(size: geo.size.height * 0.50))
+                            .font(.system(size: geo.size.height * 0.50 * (CGFloat(timerFontSize) / 100)))
                             .monospacedDigit() // ★秒数変化による左右ガタつき防止
                             .foregroundColor(timerColor)
                             .bold()
                             .minimumScaleFactor(0.5)
                             .lineLimit(1)
+                            .id(timerFontSize)
                     }
                     .frame(width: geo.size.width, height: geo.size.height)
                 }
@@ -138,7 +143,8 @@ struct ContentView: View {
         startTime = nil
 
         isCountingDown = true
-        countdown = 5
+        // ★固定値 5 → 設定値 countdownSec
+        countdown = countdownSec
 
         speakTwice("準備が整ったようですので開始します", "")
     }
@@ -220,8 +226,11 @@ struct ContentView: View {
             stopPressed()
         }
     }
-
     func speakTwice(_ first: String, _ second: String) {
+
+        // ★音声OFFなら何も喋らない
+        if !voiceEnabled { return }
+
         speechManager.speakTwice(first, second)
     }
 }
@@ -243,13 +252,47 @@ struct SettingsView: View {
     @AppStorage("minC") private var minC = 1800
     @AppStorage("msgC1") private var msgC1 = "30分経過"
     @AppStorage("msgC2") private var msgC2 = "30分経過です"
-
+    
+    @AppStorage("countdownSec") private var countdownSec = 5
+    @AppStorage("voiceEnabled") private var voiceEnabled = true
+    @AppStorage("timerFontSize") private var timerFontSize = 100
     @State private var showResetAlert = false
 
     var body: some View {
 
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
+                Group {
+                    Text("フォント倍率")
+                        .foregroundColor(.yellow)
+                        .font(.title3)
+
+                    HStack {
+                        Slider(
+                            value: Binding(
+                                get: { Double(timerFontSize) },
+                                set: { timerFontSize = Int($0) }
+                            ),
+                            in: 50...150
+                        )
+
+                        // ★フォント倍率を横に表示（0.50〜1.50）
+                        Text(String(format: "倍率：%.2f", Double(timerFontSize) / 100.0))
+                            .foregroundColor(.white)
+                            .font(.title2)
+                            .frame(width: 120, alignment: .leading)
+                    }
+                }
+
+                Group {
+                    Text("カウントダウン秒数")
+                        .foregroundColor(.yellow)
+                        .font(.title3)
+
+                    TextField("秒数", value: $countdownSec, format: .number)
+                        .keyboardType(.numberPad)
+                        .textFieldStyle(.roundedBorder)
+                }
 
                 Text("経過時間(秒) メッセージ1 メッセージ2")
                     .foregroundColor(.white)
@@ -257,12 +300,9 @@ struct SettingsView: View {
                     .padding(.bottom, 10)
 
                 Group {
-                    Text("セット1（10分）")
-                        .foregroundColor(.yellow)
-                        .font(.title3)
-
-                    Stepper("秒数: \(minA)", value: $minA)
-                        .foregroundColor(.white)
+                    TextField("秒数", value: $minA, format: .number)
+                        .keyboardType(.numberPad)
+                        .textFieldStyle(.roundedBorder)
 
                     TextField("メッセージ1", text: $msgA1)
                         .textFieldStyle(.roundedBorder)
@@ -272,12 +312,9 @@ struct SettingsView: View {
                 }
 
                 Group {
-                    Text("セット2（20分）")
-                        .foregroundColor(.yellow)
-                        .font(.title3)
-
-                    Stepper("秒数: \(minB)", value: $minB)
-                        .foregroundColor(.white)
+                    TextField("秒数", value: $minB, format: .number)
+                        .keyboardType(.numberPad)
+                        .textFieldStyle(.roundedBorder)
 
                     TextField("メッセージ1", text: $msgB1)
                         .textFieldStyle(.roundedBorder)
@@ -287,18 +324,19 @@ struct SettingsView: View {
                 }
 
                 Group {
-                    Text("セット3（30分）")
-                        .foregroundColor(.yellow)
-                        .font(.title3)
-
-                    Stepper("秒数: \(minC)", value: $minC)
-                        .foregroundColor(.white)
+                    TextField("秒数", value: $minC, format: .number)
+                        .keyboardType(.numberPad)
+                        .textFieldStyle(.roundedBorder)
 
                     TextField("メッセージ1", text: $msgC1)
                         .textFieldStyle(.roundedBorder)
 
                     TextField("メッセージ2", text: $msgC2)
                         .textFieldStyle(.roundedBorder)
+                }
+                Group {
+                    Toggle("音声ガイドを有効にする", isOn: $voiceEnabled)
+                        .foregroundColor(.white)
                 }
 
                 Button(action: saveSettings) {
@@ -350,6 +388,9 @@ struct SettingsView: View {
         minC = 1800
         msgC1 = "30分経過"
         msgC2 = "30分経過です"
+        countdownSec = 5
+        voiceEnabled = true
+        timerFontSize = 100
     }
 }
 
@@ -360,6 +401,10 @@ struct SpecView: View {
     @Environment(\.rotationLock) var rotationLock
 
     private let specText = """
+【追加機能】
+・フォントを指定可能
+・カウントダウン秒数を指定可能
+・音声の ON/OFF が可能
 【開始】
 ・準備が整ったようですので開始します
  よーい はじめ
@@ -386,7 +431,7 @@ struct SpecView: View {
 ----------------------------------------
 配布は自由です。
 問題やご要望がございましたら、
-kyoto.naruto@gmail.com へ連絡ください。
+sobatimerapp@gmail.com へ連絡ください。
 """
 
     var body: some View {

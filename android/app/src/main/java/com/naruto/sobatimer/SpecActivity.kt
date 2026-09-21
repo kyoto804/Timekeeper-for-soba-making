@@ -29,6 +29,10 @@ class SpecActivity : AppCompatActivity() {
         // 仕様テキスト（固定）
         // -----------------------------------------------------------
         val spec = """　
+【追加機能】
+・フォントを指定可能
+・カウントダウン秒数を指定可能
+・音声の ON/OFF が可能
 【開始】
 ・準備が整ったようですので開始します
 　よーい　はじめ
@@ -54,7 +58,7 @@ class SpecActivity : AppCompatActivity() {
 
 配布は自由です。
 問題やご要望がございましたら、
-kyoto.naruto@gmail.com へ連絡ください。
+sobatimerapp@gmail.com へ連絡ください。
 """.trimIndent()
 
         // -----------------------------------------------------------

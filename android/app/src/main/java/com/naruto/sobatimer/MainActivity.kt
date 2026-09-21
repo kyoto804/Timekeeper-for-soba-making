@@ -146,7 +146,12 @@ class MainActivity : AppCompatActivity() {
             stopBtn.y = h * 0.80f
             specBtn.x = w * 0.80f
             specBtn.y = h * 0.80f
-            val px = h * 0.25f
+            
+            // ★ フォント倍率を設定から読む
+            val pref = getSharedPreferences("settings", MODE_PRIVATE)
+            val scale = pref.getFloat("fontScale", 1.0f)
+            // ★ 画面高さ × 0.25 × 倍率
+            val px = h * 0.25f * scale            
             val sp = TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_SP,
                 px,
@@ -212,6 +217,8 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         loadSettings()
         hideSystemBars()
+        // ★ 設定画面から戻った時にフォントを再描画する
+        startBtn.post {updateFontScale()}
     }
 
     private fun loadSettings() {
@@ -229,6 +236,13 @@ class MainActivity : AppCompatActivity() {
 
     // 音声（2回）
     private fun speakTwice(first: String, second: String) {
+    
+        // ★ 設定値を読む（音声ON/OFF）
+        val pref = getSharedPreferences("settings", MODE_PRIVATE)
+        val soundEnabled = pref.getBoolean("soundEnabled", true)
+        // ★ OFF の場合は完全に無音
+        if (!soundEnabled) return
+    
         tts.speak(first, TextToSpeech.QUEUE_FLUSH, null, null)
         val delay = when {
             first.length <= 6 -> 350L
@@ -242,7 +256,9 @@ class MainActivity : AppCompatActivity() {
 
     // カウントダウン
     private fun startCountdown() {
-        var count = 5
+        // ★ 設定値を読む（デフォルト 5）
+        val pref = getSharedPreferences("settings", MODE_PRIVATE)
+        var count = pref.getInt("countdownSec", 5)
         countdownText.text = "開始まで: $count"
         handler.post(object : Runnable {
             override fun run() {
@@ -305,5 +321,23 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         tts.shutdown()
         super.onDestroy()
+    }
+    
+    private fun updateFontScale() {
+        val root = startBtn.rootView
+        val w = root.width.toFloat()
+        val h = root.height.toFloat()
+    
+        val pref = getSharedPreferences("settings", MODE_PRIVATE)
+        val scale = pref.getFloat("fontScale", 1.0f)
+    
+        val px = h * 0.25f * scale
+        val sp = TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_SP,
+            px,
+            resources.displayMetrics
+        )
+        
+        timerText.setTextSize(TypedValue.COMPLEX_UNIT_PX, sp)
     }
 }

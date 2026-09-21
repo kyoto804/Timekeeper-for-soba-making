@@ -1,7 +1,7 @@
 // -----------------------------------------------------------
 // SettingsActivity.kt
 // 作成日: 2026-09-07
-// Ver: 1.0
+// Ver: 1.2（カウントダウン秒数＋音声ON/OFF追加）
 // -----------------------------------------------------------
 
 package com.naruto.sobatimer
@@ -9,13 +9,13 @@ package com.naruto.sobatimer
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Switch
 import androidx.appcompat.app.AppCompatActivity
+import android.widget.SeekBar
+import android.widget.TextView
 
 class SettingsActivity : AppCompatActivity() {
 
-    // -----------------------------------------------------------
-    // onCreate（初期化）
-    // -----------------------------------------------------------
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
@@ -23,6 +23,12 @@ class SettingsActivity : AppCompatActivity() {
         // -----------------------------------------------------------
         // UI 要素取得
         // -----------------------------------------------------------
+        val fontScaleSeek = findViewById<SeekBar>(R.id.fontScaleSeek)
+        val fontScaleLabel = findViewById<TextView>(R.id.fontScaleLabel)
+        
+        val countdownSec = findViewById<EditText>(R.id.countdownSec)
+        val soundSwitch = findViewById<Switch>(R.id.soundSwitch)
+
         val minA = findViewById<EditText>(R.id.minA)
         val minB = findViewById<EditText>(R.id.minB)
         val minC = findViewById<EditText>(R.id.minC)
@@ -41,6 +47,26 @@ class SettingsActivity : AppCompatActivity() {
         // -----------------------------------------------------------
         // 現在の設定値を表示
         // -----------------------------------------------------------
+
+        // ★ 現在の倍率を読み込み
+        val currentScale = pref.getFloat("fontScale", 1.0f)
+        val progress = ((currentScale - 0.5f) * 100).toInt()
+        fontScaleSeek.progress = progress
+        fontScaleLabel.text = "フォント倍率: %.2f".format(currentScale)
+
+        // ★ スライダー変更時
+        fontScaleSeek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, p: Int, fromUser: Boolean) {
+                val scale = p / 100f + 0.5f
+                fontScaleLabel.text = "フォント倍率: %.2f".format(scale)
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        countdownSec.setText(pref.getInt("countdownSec", 5).toString())
+        soundSwitch.isChecked = pref.getBoolean("soundEnabled", true)
+
         minA.setText(pref.getInt("minA", 600).toString())
         minB.setText(pref.getInt("minB", 1200).toString())
         minC.setText(pref.getInt("minC", 1800).toString())
@@ -58,7 +84,16 @@ class SettingsActivity : AppCompatActivity() {
         // 保存ボタン
         // -----------------------------------------------------------
         findViewById<Button>(R.id.saveBtn).setOnClickListener {
+            val scale = fontScaleSeek.progress / 100f + 0.5f
             pref.edit().apply {
+                // ★ スライダーの値を
+                putFloat("fontScale", scale)
+                // ★ カウントダウン秒数
+                putInt("countdownSec", countdownSec.text.toString().toIntOrNull() ?: 5)
+
+                // ★ 音声 ON/OFF
+                putBoolean("soundEnabled", soundSwitch.isChecked)
+
                 putInt("minA", minA.text.toString().toIntOrNull() ?: 600)
                 putInt("minB", minB.text.toString().toIntOrNull() ?: 1200)
                 putInt("minC", minC.text.toString().toIntOrNull() ?: 1800)
@@ -74,6 +109,7 @@ class SettingsActivity : AppCompatActivity() {
 
                 apply()
             }
+
             finish()
         }
 
@@ -81,7 +117,12 @@ class SettingsActivity : AppCompatActivity() {
         // 初期値に戻すボタン
         // -----------------------------------------------------------
         findViewById<Button>(R.id.resetBtn).setOnClickListener {
+
             pref.edit().apply {
+                putFloat("fontScale", 1.0f)
+                putInt("countdownSec", 5)
+                putBoolean("soundEnabled", true)
+
                 putInt("minA", 600)
                 putInt("minB", 1200)
                 putInt("minC", 1800)
@@ -97,6 +138,11 @@ class SettingsActivity : AppCompatActivity() {
 
                 apply()
             }
+
+            fontScaleSeek.progress = 50 
+            fontScaleLabel.text = "フォント倍率: 1.00"
+            countdownSec.setText("5")
+            soundSwitch.isChecked = true
 
             minA.setText("600")
             minB.setText("1200")

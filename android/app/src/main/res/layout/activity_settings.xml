@@ -14,9 +14,41 @@
         <!-- ★ 上余白 -->
         <View
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="12dp"
             android:background="#000000" />
+            
+        <!-- ★ フォント倍率（SeekBar） -->
+        <TextView
+            android:id="@+id/fontScaleLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="フォント倍率: 1.0"
+            android:textSize="18sp"
+            android:textColor="#FFFFFF" />
 
+        <SeekBar
+            android:id="@+id/fontScaleSeek"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="100" />
+            
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="カウントダウン秒数"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:paddingBottom="8dp" />
+
+        <EditText
+            android:id="@+id/countdownSec"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="例：5"
+            android:inputType="numberDecimal"
+            android:textColor="#000000"
+            android:background="@drawable/edittext_white" />
+            
         <!-- ★ 上部説明文 -->
         <TextView
             android:id="@+id/headerText"
@@ -37,21 +69,24 @@
             android:layout_height="wrap_content"
             android:hint="秒数（例：600）"
             android:inputType="numberDecimal"
-            android:textColor="#FFFFFF" />
+            android:textColor="#000000"
+            android:background="@drawable/edittext_white" />
 
         <EditText
             android:id="@+id/msgA1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="メッセージ1（例：10分経過）"
-            android:textColor="#FFFFFF" />
+            android:textColor="#000000"
+            android:background="@drawable/edittext_white" />
 
         <EditText
             android:id="@+id/msgA2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="メッセージ2（例：10分経過です）"
-            android:textColor="#FFFFFF" />
+            android:textColor="#000000"
+            android:background="@drawable/edittext_white" />
 
         <!-- ============================================================ -->
         <!-- ★ セット2 -->
@@ -62,21 +97,24 @@
             android:layout_height="wrap_content"
             android:hint="秒数（例：1200）"
             android:inputType="numberDecimal"
-            android:textColor="#FFFFFF" />
+            android:textColor="#000000"
+            android:background="@drawable/edittext_white" />
 
         <EditText
             android:id="@+id/msgB1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="メッセージ1（例：20分経過）"
-            android:textColor="#FFFFFF" />
+            android:textColor="#000000"
+            android:background="@drawable/edittext_white" />
 
         <EditText
             android:id="@+id/msgB2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="メッセージ2（例：20分経過です）"
-            android:textColor="#FFFFFF" />
+            android:textColor="#000000"
+            android:background="@drawable/edittext_white" />
 
         <!-- ============================================================ -->
         <!-- ★ セット3 -->
@@ -87,28 +125,41 @@
             android:layout_height="wrap_content"
             android:hint="秒数（例：1800）"
             android:inputType="numberDecimal"
-            android:textColor="#FFFFFF" />
+            android:textColor="#000000"
+            android:background="@drawable/edittext_white" />
 
         <EditText
             android:id="@+id/msgC1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="メッセージ1（例：30分経過）"
-            android:textColor="#FFFFFF" />
+            android:textColor="#000000"
+            android:background="@drawable/edittext_white" />
 
         <EditText
             android:id="@+id/msgC2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="メッセージ2（例：30分経過です）"
-            android:textColor="#FFFFFF" />
+            android:textColor="#000000"
+            android:background="@drawable/edittext_white" />
 
         <!-- ★ 下余白 -->
         <View
             android:layout_width="match_parent"
-            android:layout_height="80dp"
+            android:layout_height="12dp"
             android:background="#000000" />
-
+            
+        <!-- ★ 音声ガイド ON/OFF -->
+        <Switch
+            android:id="@+id/soundSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="音声ガイドを使う"
+            android:textColor="#FFFFFF"
+            android:paddingTop="20dp"
+            android:paddingBottom="10dp" />
+            
         <!-- ★ 保存 -->
         <Button
             android:id="@+id/saveBtn"
