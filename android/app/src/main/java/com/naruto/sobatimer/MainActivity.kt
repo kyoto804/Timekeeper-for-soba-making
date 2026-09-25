@@ -4,6 +4,7 @@
 // 変更日: 2026-09-11
 // Ver: 1.1（時刻差分方式・レスポンシブ対応・FGS・3600秒停止・短いコメント統一）
 // Ver: 1.1（警告ゼロ・WindowInsetsController対応・3600秒停止・短いコメント統一）
+// Ver: 1.2（終了時間の選択（40 / 35 / 30）を追加）
 // -----------------------------------------------------------
 
 package com.naruto.sobatimer
@@ -53,7 +54,7 @@ class MainActivity : AppCompatActivity() {
     private var msgB2 = "20分経過です"
     private var msgC1 = "30分経過"
     private var msgC2 = "30分経過です"
-
+    private lateinit var pref: android.content.SharedPreferences
     // ★ タイマーRunnable（3600秒停止のため変数化）
     private val timerRunnable = object : Runnable {
         override fun run() {
@@ -83,27 +84,67 @@ class MainActivity : AppCompatActivity() {
 
     // メッセージ一覧
     private val messages: Map<Int, Pair<String, String>>
-        get() = mapOf(
+        get() {
+             val finishMin = pref.getInt("finishMin", 40)
+             val finishSec = finishMin * 60
+        
+                 // ★終了時間に応じた残り5分
+             val remain5Sec: Int
+             val remain5Msg1: String
+        
+             when (finishMin) {
+                 40 -> {
+                     remain5Sec = 35 * 60   // 2100
+                     remain5Msg1 = "35分経過"
+                 }
+                 35 -> {
+                     remain5Sec = 30 * 60   // 1800
+                     remain5Msg1 = "30分経過"
+                 }
+                 30 -> {
+                     remain5Sec = 25 * 60   // 1500
+                     remain5Msg1 = "25分経過"
+                 }
+                 else -> {
+                     remain5Sec = 35 * 60
+                         remain5Msg1 = "35分経過"
+                 }
+             }
+        
+            // ★ minC は 40分モードのときだけ有効
+            val cMessage = if (finishMin == 40) {
+                mapOf(minC to Pair(msgC1, msgC2))
+            } else {
+            emptyMap()
+            }
+        
+            return mapOf(
             minA to Pair(msgA1, msgA2),
             minB to Pair(msgB1, msgB2),
-            minC to Pair(msgC1, msgC2),
-            2100 to Pair("35分経過", "残り5分です"),
-            2160 to Pair("残り4分", "残り4分です"),
-            2220 to Pair("残り3分", "残り3分です"),
-            2280 to Pair("残り2分", "残り2分です"),
-            2340 to Pair("残り1分", "残り1分です"),
-            2370 to Pair("残り30秒", "残り30秒です"),
-            2380 to Pair("残り20秒", "残り20秒です"),
-            2390 to Pair("残り10秒", "残り10秒です"),
-            2400 to Pair("終了", "終了です"),
+        
+            // ★残り5分（モードごとに変化）
+            remain5Sec to Pair(remain5Msg1, "残り5分です"),
+        
+            // ★残り4分〜残り10秒（finishSec から計算）
+            (finishSec - 240) to Pair("残り4分", "残り4分です"),
+            (finishSec - 180) to Pair("残り3分", "残り3分です"),
+            (finishSec - 120) to Pair("残り2分", "残り2分です"),
+            (finishSec - 60)  to Pair("残り1分", "残り1分です"),
+        
+            (finishSec - 30) to Pair("残り30秒", "残り30秒です"),
+            (finishSec - 20) to Pair("残り20秒", "残り20秒です"),
+            (finishSec - 10) to Pair("残り10秒", "残り10秒です"),
+        
+            finishSec to Pair("終了", "終了です"),
             3600 to Pair("60分経過しました。終了します。", "お疲れさまでした")
-        )
+             ) + cMessage
+        }
 
     // onCreate
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
+        pref = getSharedPreferences("settings", MODE_PRIVATE)
         // ★ バナー削除（Android14対応）
         hideSystemBars()
 

@@ -13,6 +13,7 @@ import android.widget.Switch
 import androidx.appcompat.app.AppCompatActivity
 import android.widget.SeekBar
 import android.widget.TextView
+import android.widget.RadioGroup   // ★ 追加
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -42,6 +43,8 @@ class SettingsActivity : AppCompatActivity() {
         val msgC1 = findViewById<EditText>(R.id.msgC1)
         val msgC2 = findViewById<EditText>(R.id.msgC2)
 
+        // ★ 終了時間（40 / 35 / 30）
+        val finishGroup = findViewById<RadioGroup>(R.id.finishGroup)
         val pref = getSharedPreferences("settings", MODE_PRIVATE)
 
         // -----------------------------------------------------------
@@ -80,17 +83,32 @@ class SettingsActivity : AppCompatActivity() {
         msgC1.setText(pref.getString("msgC1", "30分経過"))
         msgC2.setText(pref.getString("msgC2", "30分経過です"))
 
+        // ★ 終了時間（40 / 35 / 30）
+        val finishMin = pref.getInt("finishMin", 40)
+        when (finishMin) {
+            40 -> finishGroup.check(R.id.rb40)
+            35 -> finishGroup.check(R.id.rb35)
+            30 -> finishGroup.check(R.id.rb30)
+        }
         // -----------------------------------------------------------
         // 保存ボタン
         // -----------------------------------------------------------
         findViewById<Button>(R.id.saveBtn).setOnClickListener {
             val scale = fontScaleSeek.progress / 100f + 0.5f
+            // ★ ラジオボタンの選択値
+            val selectedFinishMin = when (finishGroup.checkedRadioButtonId) {
+                R.id.rb40 -> 40
+                R.id.rb35 -> 35
+                R.id.rb30 -> 30
+                else -> 40
+            }
             pref.edit().apply {
                 // ★ スライダーの値を
                 putFloat("fontScale", scale)
+                // ★ 終了時間保存
+                putInt("finishMin", selectedFinishMin)
                 // ★ カウントダウン秒数
                 putInt("countdownSec", countdownSec.text.toString().toIntOrNull() ?: 5)
-
                 // ★ 音声 ON/OFF
                 putBoolean("soundEnabled", soundSwitch.isChecked)
 
@@ -119,7 +137,8 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<Button>(R.id.resetBtn).setOnClickListener {
 
             pref.edit().apply {
-                putFloat("fontScale", 1.0f)
+                // ★ 終了時間を初期値（40分）に戻す
+                putInt("finishMin", 40)
                 putInt("countdownSec", 5)
                 putBoolean("soundEnabled", true)
 
@@ -139,11 +158,9 @@ class SettingsActivity : AppCompatActivity() {
                 apply()
             }
 
-            fontScaleSeek.progress = 50 
-            fontScaleLabel.text = "フォント倍率: 1.00"
+            finishGroup.check(R.id.rb40)
             countdownSec.setText("5")
             soundSwitch.isChecked = true
-
             minA.setText("600")
             minB.setText("1200")
             minC.setText("1800")

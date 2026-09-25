@@ -3,7 +3,11 @@
 //  SobaTimerApp
 //
 //  Created by hiroshi on 2026/09/13.
-//monospacedDigit
+//  Updated on 2026/09/25
+//
+//  【追加機能】
+//  ・終了時間（40 / 35 / 30）の選択機能を追加
+//
 import SwiftUI
 import AVFoundation
 import Combine
@@ -39,7 +43,9 @@ struct ContentView: View {
     @AppStorage("countdownSec") private var countdownSec = 5
     @AppStorage("voiceEnabled") private var voiceEnabled = true
     @AppStorage("timerFontSize") private var timerFontSize = 100
-    
+    // ★追加：終了時間（40 / 35 / 30）
+    @AppStorage("finishMin") private var finishMin = 40
+        
     @StateObject private var speechManager = SpeechManager()
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -194,27 +200,52 @@ struct ContentView: View {
     }
 
     func checkMessages() {
+        let finishSec = finishMin * 60
 
-        let messages: [Int: (String, String)] = [
+        // ★終了時間に応じた残り5分の設定
+        let remain5Sec: Int
+        let remain5Msg1: String
+
+        switch finishMin {
+        case 40:
+            remain5Sec = 2100   // 35分
+            remain5Msg1 = "35分経過"
+        case 35:
+            remain5Sec = 1800   // 30分
+            remain5Msg1 = "30分経過"
+        case 30:
+            remain5Sec = 1500   // 25分
+            remain5Msg1 = "25分経過"
+        default:
+            remain5Sec = 2100
+            remain5Msg1 = "35分経過"
+        }
+        var messages: [Int: (String, String)] = [
             minA: (msgA1, msgA2),
             minB: (msgB1, msgB2),
-            minC: (msgC1, msgC2),
 
-            2100: ("35分経過", "残り5分です"),
-            2160: ("残り4分", "残り4分です"),
-            2220: ("残り3分", "残り3分です"),
-            2280: ("残り2分", "残り2分です"),
-            2340: ("残り1分", "残り1分です"),
+            // ★残り5分（モードごとに変化）
+            remain5Sec: (remain5Msg1, "残り5分です"),
 
-            2370: ("残り30秒", "残り30秒です"),
-            2380: ("残り20秒", "残り20秒です"),
-            2390: ("残り10秒", "残り10秒です"),
+            finishSec - 240: ("残り4分", "残り4分です"),
+            finishSec - 180: ("残り3分", "残り3分です"),
+            finishSec - 120: ("残り2分", "残り2分です"),
+            finishSec - 60: ("残り1分", "残り1分です"),
 
-            2400: ("終了", "終了です"),
+            finishSec - 30: ("残り30秒", "残り30秒です"),
+            finishSec - 20: ("残り20秒", "残り20秒です"),
+            finishSec - 10: ("残り10秒", "残り10秒です"),
+
+            finishSec: ("終了", "終了です"),
             3600: ("60分経過しました。終了します。", "お疲れさまでした")
         ]
 
-        if seconds == 2400 {
+        // ★minC は 40分モードのときだけ有効
+        if finishMin == 40 {
+            messages[minC] = (msgC1, msgC2)
+        }
+
+        if seconds == finishSec {
             timerColor = .red
         }
 
@@ -227,7 +258,6 @@ struct ContentView: View {
         }
     }
     func speakTwice(_ first: String, _ second: String) {
-
         // ★音声OFFなら何も喋らない
         if !voiceEnabled { return }
 
@@ -256,6 +286,8 @@ struct SettingsView: View {
     @AppStorage("countdownSec") private var countdownSec = 5
     @AppStorage("voiceEnabled") private var voiceEnabled = true
     @AppStorage("timerFontSize") private var timerFontSize = 100
+    // ★追加：終了時間選択
+    @AppStorage("finishMin") private var finishMin = 40
     @State private var showResetAlert = false
 
     var body: some View {
@@ -264,7 +296,7 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 24) {
                 Group {
                     Text("フォント倍率")
-                        .foregroundColor(.yellow)
+                        .foregroundColor(.white)
                         .font(.title3)
 
                     HStack {
@@ -283,10 +315,36 @@ struct SettingsView: View {
                             .frame(width: 120, alignment: .leading)
                     }
                 }
+                // ★終了時間選択
+                Group {
+                    Text("終了時間　40分　35分　30分")
+                        .foregroundColor(.white)
+                        .font(.title3)
+
+                    Picker("終了時間", selection: $finishMin) {
+                        Text("40分").tag(40)
+                        Text("35分").tag(35)
+                        Text("30分").tag(30)
+                    }
+                    .pickerStyle(.segmented)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color.gray.opacity(0.25))   // ← ★黒からグレーへ
+                    )
+                    .tint(.white)   // 選択中タブは黄色
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(Color.gray.opacity(0.7), lineWidth: 1.4)
+                    )
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color.gray.opacity(0.25))   // ← ★未選択タブの背景を薄いグレーに
+                    )
+                }
 
                 Group {
                     Text("カウントダウン秒数")
-                        .foregroundColor(.yellow)
+                        .foregroundColor(.white)
                         .font(.title3)
 
                     TextField("秒数", value: $countdownSec, format: .number)
@@ -390,7 +448,7 @@ struct SettingsView: View {
         msgC2 = "30分経過です"
         countdownSec = 5
         voiceEnabled = true
-        timerFontSize = 100
+        finishMin = 40
     }
 }
 
@@ -405,6 +463,7 @@ struct SpecView: View {
 ・フォントを指定可能
 ・カウントダウン秒数を指定可能
 ・音声の ON/OFF が可能
+・終了時間の選択（40/35/30）
 【開始】
 ・準備が整ったようですので開始します
  よーい はじめ
@@ -414,7 +473,7 @@ struct SpecView: View {
 ・設定した20分 20分経過／20分経過です
 ・設定した30分 30分経過／30分経過です
 
-【残り時間（固定）】
+【残り時間 （終了時間に応じて変動）】
 ・35分（残り5分）35分経過／残り5分です
 ・36分（残り4分） 残り4分／残り4分です
 ・37分（残り3分） 残り3分／残り3分です
@@ -425,7 +484,7 @@ struct SpecView: View {
 ・残り10秒 残り10秒／残り10秒です
 
 【終了】
-・40分 終了／終了です
+・40分 終了／終了です（終了時間に応じて変動）
 ・60分 60分経過しました。終了します／お疲れさまでした
 
 ----------------------------------------
