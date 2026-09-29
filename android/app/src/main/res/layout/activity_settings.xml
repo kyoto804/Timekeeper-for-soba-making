@@ -16,7 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="12dp"
             android:background="#000000" />
-            
+
         <!-- ★ フォント倍率（SeekBar） -->
         <TextView
             android:id="@+id/fontScaleLabel"
@@ -40,49 +40,56 @@
             android:textColor="#FFFFFF"
             android:textSize="18sp"
             android:paddingBottom="8dp" />
-        
+
         <RadioGroup
             android:id="@+id/finishGroup"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="8dp"
+            android:padding="2dp"
             android:background="#404040"
             android:gravity="center">
-        
+
             <RadioButton
                 android:id="@+id/rb40"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="40分"
                 android:textColor="#000000"
+                android:textSize="16sp"
                 android:button="@null"
-                android:padding="12dp"
+                android:padding="4dp"
                 android:background="@drawable/radio_segment"
-                android:layout_marginEnd="8dp" />
-        
+                android:gravity="center" />
+
             <RadioButton
                 android:id="@+id/rb35"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="35分"
                 android:textColor="#000000"
+                android:textSize="16sp"
                 android:button="@null"
-                android:padding="12dp"
+                android:padding="4dp"
                 android:background="@drawable/radio_segment"
-                android:layout_marginEnd="8dp" />
-        
+                android:gravity="center" />
+
             <RadioButton
                 android:id="@+id/rb30"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
                 android:text="30分"
                 android:textColor="#000000"
+                android:textSize="16sp"
                 android:button="@null"
-                android:padding="12dp"
-                android:background="@drawable/radio_segment" />
+                android:padding="4dp"
+                android:background="@drawable/radio_segment"
+                android:gravity="center" />
         </RadioGroup>
-            
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -98,8 +105,11 @@
             android:hint="例：5"
             android:inputType="numberDecimal"
             android:textColor="#000000"
+            android:textSize="16sp"
+            android:padding="4dp"
+            android:minHeight="0dp"
             android:background="@drawable/edittext_white" />
-            
+
         <!-- ★ 上部説明文 -->
         <TextView
             android:id="@+id/headerText"
@@ -111,9 +121,7 @@
             android:paddingBottom="20dp"
             android:background="#000000" />
 
-        <!-- ============================================================ -->
         <!-- ★ セット1 -->
-        <!-- ============================================================ -->
         <EditText
             android:id="@+id/minA"
             android:layout_width="match_parent"
@@ -121,6 +129,9 @@
             android:hint="秒数（例：600）"
             android:inputType="numberDecimal"
             android:textColor="#000000"
+            android:textSize="16sp"
+            android:padding="4dp"
+            android:minHeight="0dp"
             android:background="@drawable/edittext_white" />
 
         <EditText
@@ -129,6 +140,9 @@
             android:layout_height="wrap_content"
             android:hint="メッセージ1（例：10分経過）"
             android:textColor="#000000"
+            android:textSize="16sp"
+            android:padding="4dp"
+            android:minHeight="0dp"
             android:background="@drawable/edittext_white" />
 
         <EditText
@@ -137,11 +151,12 @@
             android:layout_height="wrap_content"
             android:hint="メッセージ2（例：10分経過です）"
             android:textColor="#000000"
+            android:textSize="16sp"
+            android:padding="4dp"
+            android:minHeight="0dp"
             android:background="@drawable/edittext_white" />
 
-        <!-- ============================================================ -->
         <!-- ★ セット2 -->
-        <!-- ============================================================ -->
         <EditText
             android:id="@+id/minB"
             android:layout_width="match_parent"
@@ -149,6 +164,9 @@
             android:hint="秒数（例：1200）"
             android:inputType="numberDecimal"
             android:textColor="#000000"
+            android:textSize="16sp"
+            android:padding="4dp"
+            android:minHeight="0dp"
             android:background="@drawable/edittext_white" />
 
         <EditText
@@ -157,6 +175,9 @@
             android:layout_height="wrap_content"
             android:hint="メッセージ1（例：20分経過）"
             android:textColor="#000000"
+            android:textSize="16sp"
+            android:padding="4dp"
+            android:minHeight="0dp"
             android:background="@drawable/edittext_white" />
 
         <EditText
@@ -165,11 +186,12 @@
             android:layout_height="wrap_content"
             android:hint="メッセージ2（例：20分経過です）"
             android:textColor="#000000"
+            android:textSize="16sp"
+            android:padding="4dp"
+            android:minHeight="0dp"
             android:background="@drawable/edittext_white" />
 
-        <!-- ============================================================ -->
         <!-- ★ セット3 -->
-        <!-- ============================================================ -->
         <EditText
             android:id="@+id/minC"
             android:layout_width="match_parent"
@@ -177,6 +199,9 @@
             android:hint="秒数（例：1800）"
             android:inputType="numberDecimal"
             android:textColor="#000000"
+            android:textSize="16sp"
+            android:padding="4dp"
+            android:minHeight="0dp"
             android:background="@drawable/edittext_white" />
 
         <EditText
@@ -185,6 +210,9 @@
             android:layout_height="wrap_content"
             android:hint="メッセージ1（例：30分経過）"
             android:textColor="#000000"
+            android:textSize="16sp"
+            android:padding="4dp"
+            android:minHeight="0dp"
             android:background="@drawable/edittext_white" />
 
         <EditText
@@ -193,14 +221,17 @@
             android:layout_height="wrap_content"
             android:hint="メッセージ2（例：30分経過です）"
             android:textColor="#000000"
+            android:textSize="16sp"
+            android:padding="4dp"
+            android:minHeight="0dp"
             android:background="@drawable/edittext_white" />
 
         <!-- ★ 下余白 -->
         <View
             android:layout_width="match_parent"
-            android:layout_height="12dp"
+            android:layout_height="2dp"
             android:background="#000000" />
-            
+
         <!-- ★ 音声ガイド ON/OFF -->
         <Switch
             android:id="@+id/soundSwitch"
@@ -208,18 +239,30 @@
             android:layout_height="wrap_content"
             android:text="音声ガイドを使う"
             android:textColor="#FFFFFF"
-            android:paddingTop="20dp"
+            android:textSize="18sp"
+            android:paddingTop="10dp"
             android:paddingBottom="10dp" />
-            
+
+        <!-- ★ 終了時の確認メッセージを省略する（テキストのみ広く） -->
+        <Switch
+            android:id="@+id/skipConfirmSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="終了時の確認メッセージを省略"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp" />
+
         <!-- ★ 保存 -->
         <Button
             android:id="@+id/saveBtn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="保存"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textColor="#FFFFFF"
-            android:background="#333333"
+            android:background="@drawable/btn_round"
             android:layout_marginTop="24dp" />
 
         <!-- ★ 初期値に戻す -->
@@ -228,9 +271,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="初期値に戻す"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textColor="#FFFFFF"
-            android:background="#333333"
+            android:background="@drawable/btn_round"
             android:layout_marginTop="12dp" />
 
     </LinearLayout>

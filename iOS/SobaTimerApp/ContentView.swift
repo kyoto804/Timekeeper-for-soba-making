@@ -3,11 +3,11 @@
 //  SobaTimerApp
 //
 //  Created by hiroshi on 2026/09/13.
-//  Updated on 2026/09/25
+//  Updated on 2026/09/29
 //
 //  【追加機能】
 //  ・終了時間（40 / 35 / 30）の選択機能を追加
-//
+//  ・終了時の確認メッセージを省略
 import SwiftUI
 import AVFoundation
 import Combine
@@ -45,7 +45,7 @@ struct ContentView: View {
     @AppStorage("timerFontSize") private var timerFontSize = 100
     // ★追加：終了時間（40 / 35 / 30）
     @AppStorage("finishMin") private var finishMin = 40
-        
+    @AppStorage("skipConfirm") private var skipConfirm = false   // ← ★追加    
     @StateObject private var speechManager = SpeechManager()
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -87,7 +87,13 @@ struct ContentView: View {
                                   y: geo.size.height * 0.15)
 
                     // 左下：終了ボタン（目立つ赤色）
-                    Button("終了") { showStopAlert = true }
+                    Button("終了") {
+                        if skipConfirm {
+                            stopPressed()   // ← 即終了
+                        } else {
+                            showStopAlert = true
+                        }
+                    }
                         .font(.system(size: geo.size.height * 0.05))
                         .padding()
                         .background(Color.red.opacity(0.8))
@@ -239,8 +245,7 @@ struct ContentView: View {
             finishSec: ("終了", "終了です"),
             3600: ("60分経過しました。終了します。", "お疲れさまでした")
         ]
-
-        // ★minC は 40分モードのときだけ有効
+        // ★minC は「40分モード」
         if finishMin == 40 {
             messages[minC] = (msgC1, msgC2)
         }
@@ -286,6 +291,7 @@ struct SettingsView: View {
     @AppStorage("countdownSec") private var countdownSec = 5
     @AppStorage("voiceEnabled") private var voiceEnabled = true
     @AppStorage("timerFontSize") private var timerFontSize = 100
+    @AppStorage("skipConfirm") private var skipConfirm = false   // ← ★追加    
     // ★追加：終了時間選択
     @AppStorage("finishMin") private var finishMin = 40
     @State private var showResetAlert = false
@@ -293,13 +299,15 @@ struct SettingsView: View {
     var body: some View {
 
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                Group {
+            VStack(alignment: .leading, spacing: 8) {   // ← 24 → 8 に縮める
+
+                // フォント倍率
+                VStack(alignment: .leading, spacing: 4) {
                     Text("フォント倍率")
                         .foregroundColor(.white)
                         .font(.title3)
 
-                    HStack {
+                    HStack(spacing: 8) {
                         Slider(
                             value: Binding(
                                 get: { Double(timerFontSize) },
@@ -308,15 +316,15 @@ struct SettingsView: View {
                             in: 50...150
                         )
 
-                        // ★フォント倍率を横に表示（0.50〜1.50）
                         Text(String(format: "倍率：%.2f", Double(timerFontSize) / 100.0))
                             .foregroundColor(.white)
                             .font(.title2)
-                            .frame(width: 120, alignment: .leading)
+                            .frame(width: 110, alignment: .leading)
                     }
                 }
-                // ★終了時間選択
-                Group {
+
+                // 終了時間選択
+                VStack(alignment: .leading, spacing: 4) {
                     Text("終了時間　40分　35分　30分")
                         .foregroundColor(.white)
                         .font(.title3)
@@ -327,22 +335,19 @@ struct SettingsView: View {
                         Text("30分").tag(30)
                     }
                     .pickerStyle(.segmented)
+                    .tint(.white)
                     .background(
                         RoundedRectangle(cornerRadius: 6)
-                            .fill(Color.gray.opacity(0.25))   // ← ★黒からグレーへ
+                            .fill(Color.gray.opacity(0.25))
                     )
-                    .tint(.white)   // 選択中タブは黄色
                     .overlay(
                         RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color.gray.opacity(0.7), lineWidth: 1.4)
-                    )
-                    .background(
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(Color.gray.opacity(0.25))   // ← ★未選択タブの背景を薄いグレーに
+                            .stroke(Color.gray.opacity(0.7), lineWidth: 1.2)
                     )
                 }
 
-                Group {
+                // カウントダウン秒数
+                VStack(alignment: .leading, spacing: 4) {
                     Text("カウントダウン秒数")
                         .foregroundColor(.white)
                         .font(.title3)
@@ -352,12 +357,14 @@ struct SettingsView: View {
                         .textFieldStyle(.roundedBorder)
                 }
 
+                // 経過時間タイトル
                 Text("経過時間(秒) メッセージ1 メッセージ2")
                     .foregroundColor(.white)
                     .font(.system(size: 18))
-                    .padding(.bottom, 10)
+                    .padding(.bottom, 4)   // ← 10 → 4 に縮める
 
-                Group {
+                // A
+                VStack(alignment: .leading, spacing: 4) {
                     TextField("秒数", value: $minA, format: .number)
                         .keyboardType(.numberPad)
                         .textFieldStyle(.roundedBorder)
@@ -369,7 +376,8 @@ struct SettingsView: View {
                         .textFieldStyle(.roundedBorder)
                 }
 
-                Group {
+                // B
+                VStack(alignment: .leading, spacing: 4) {
                     TextField("秒数", value: $minB, format: .number)
                         .keyboardType(.numberPad)
                         .textFieldStyle(.roundedBorder)
@@ -381,7 +389,8 @@ struct SettingsView: View {
                         .textFieldStyle(.roundedBorder)
                 }
 
-                Group {
+                // C
+                VStack(alignment: .leading, spacing: 4) {
                     TextField("秒数", value: $minC, format: .number)
                         .keyboardType(.numberPad)
                         .textFieldStyle(.roundedBorder)
@@ -392,27 +401,32 @@ struct SettingsView: View {
                     TextField("メッセージ2", text: $msgC2)
                         .textFieldStyle(.roundedBorder)
                 }
-                Group {
-                    Toggle("音声ガイドを有効にする", isOn: $voiceEnabled)
-                        .foregroundColor(.white)
-                }
 
+                // Toggles
+                Toggle("音声ガイドを有効にする", isOn: $voiceEnabled)
+                    .foregroundColor(.white)
+
+                Toggle("終了時の確認メッセージを省略", isOn: $skipConfirm)
+                    .foregroundColor(.white)
+
+                // 保存ボタン
                 Button(action: saveSettings) {
                     Text("保存")
                         .font(.title2)
                         .frame(maxWidth: .infinity)
-                        .padding()
+                        .padding(.vertical, 10)   // ← 詰める
                         .background(Color.gray.opacity(0.7))
                         .foregroundColor(.white)
                         .cornerRadius(8)
                 }
-                .padding(.top, 20)
+                .padding(.top, 12)
 
+                // 初期値に戻す
                 Button(action: { showResetAlert = true }) {
                     Text("初期値に戻す")
                         .font(.title2)
                         .frame(maxWidth: .infinity)
-                        .padding()
+                        .padding(.vertical, 10)
                         .background(Color.gray.opacity(0.7))
                         .foregroundColor(.white)
                         .cornerRadius(8)
@@ -422,9 +436,10 @@ struct SettingsView: View {
                     Button("キャンセル", role: .cancel) {}
                 }
 
-                Spacer().frame(height: 80)
+                Spacer().frame(height: 40)   // ← 80 → 40 に縮める
             }
-            .padding(24)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
         }
         .background(Color.black)
         .navigationTitle("設定")
@@ -449,6 +464,7 @@ struct SettingsView: View {
         countdownSec = 5
         voiceEnabled = true
         finishMin = 40
+        skipConfirm = false
     }
 }
 

@@ -1,6 +1,7 @@
 // -----------------------------------------------------------
 // SettingsActivity.kt
 // 作成日: 2026-09-07
+// 変更日: 2026-09-29
 // Ver: 1.2（カウントダウン秒数＋音声ON/OFF追加）
 // -----------------------------------------------------------
 
@@ -45,6 +46,9 @@ class SettingsActivity : AppCompatActivity() {
 
         // ★ 終了時間（40 / 35 / 30）
         val finishGroup = findViewById<RadioGroup>(R.id.finishGroup)
+        // ★ 確認メッセージ省略
+        val skipConfirmSwitch = findViewById<Switch>(R.id.skipConfirmSwitch)
+       
         val pref = getSharedPreferences("settings", MODE_PRIVATE)
 
         // -----------------------------------------------------------
@@ -90,6 +94,9 @@ class SettingsActivity : AppCompatActivity() {
             35 -> finishGroup.check(R.id.rb35)
             30 -> finishGroup.check(R.id.rb30)
         }
+        // ★ 現在の設定値を読み込み
+        skipConfirmSwitch.isChecked = pref.getBoolean("skipConfirm", false)
+        
         // -----------------------------------------------------------
         // 保存ボタン
         // -----------------------------------------------------------
@@ -111,6 +118,7 @@ class SettingsActivity : AppCompatActivity() {
                 putInt("countdownSec", countdownSec.text.toString().toIntOrNull() ?: 5)
                 // ★ 音声 ON/OFF
                 putBoolean("soundEnabled", soundSwitch.isChecked)
+                putBoolean("skipConfirm", skipConfirmSwitch.isChecked)
 
                 putInt("minA", minA.text.toString().toIntOrNull() ?: 600)
                 putInt("minB", minB.text.toString().toIntOrNull() ?: 1200)
@@ -124,7 +132,6 @@ class SettingsActivity : AppCompatActivity() {
 
                 putString("msgC1", msgC1.text.toString())
                 putString("msgC2", msgC2.text.toString())
-
                 apply()
             }
 
@@ -141,6 +148,7 @@ class SettingsActivity : AppCompatActivity() {
                 putInt("finishMin", 40)
                 putInt("countdownSec", 5)
                 putBoolean("soundEnabled", true)
+                putBoolean("skipConfirm", skipConfirmSwitch.isChecked)
 
                 putInt("minA", 600)
                 putInt("minB", 1200)
@@ -154,13 +162,13 @@ class SettingsActivity : AppCompatActivity() {
 
                 putString("msgC1", "30分経過")
                 putString("msgC2", "30分経過です")
-
                 apply()
             }
 
             finishGroup.check(R.id.rb40)
             countdownSec.setText("5")
             soundSwitch.isChecked = true
+            skipConfirmSwitch.isChecked = false
             minA.setText("600")
             minB.setText("1200")
             minC.setText("1800")

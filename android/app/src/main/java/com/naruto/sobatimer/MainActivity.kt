@@ -1,10 +1,9 @@
 // -----------------------------------------------------------
 // MainActivity.kt
 // 作成日: 2026-09-07
-// 変更日: 2026-09-11
+// 変更日: 2026-09-29
 // Ver: 1.1（時刻差分方式・レスポンシブ対応・FGS・3600秒停止・短いコメント統一）
-// Ver: 1.1（警告ゼロ・WindowInsetsController対応・3600秒停止・短いコメント統一）
-// Ver: 1.2（終了時間の選択（40 / 35 / 30）を追加）
+// Ver: 1.2（カウントダウン秒数＋音声ON/OFF追加）
 // -----------------------------------------------------------
 
 package com.naruto.sobatimer
@@ -228,8 +227,53 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, SpecActivity::class.java))
         }
 
+stopBtn.setOnClickListener {
+
+    val skipConfirm = pref.getBoolean("skipConfirm", false)
+
+    if (skipConfirm) {
+        // ★ 確認なしで即終了
+        stopTimerAndShowElapsed()
+        isRunning = false
+        startBtn.isEnabled = true
+        startBtn.text = "開始"
+        startBtn.backgroundTintList =
+            ColorStateList.valueOf(Color.parseColor("#0066FF"))
+        return@setOnClickListener
+    }
+
+    // ★ 通常の確認ダイアログ
+    AlertDialog.Builder(this)
+        .setTitle("確認")
+        .setMessage("タイマーを終了しますか？")
+        .setPositiveButton("終了") { _, _ ->
+            stopTimerAndShowElapsed()
+            isRunning = false
+            startBtn.isEnabled = true
+            startBtn.text = "開始"
+            startBtn.backgroundTintList =
+                ColorStateList.valueOf(Color.parseColor("#0066FF"))
+        }
+        .setNegativeButton("キャンセル", null)
+        .show()
+}
+
         // ★ 終了
         stopBtn.setOnClickListener {
+        
+            val skipConfirm = pref.getBoolean("skipConfirm", false)
+
+            if (skipConfirm) {
+                // ★ 確認なしで即終了
+                stopTimerAndShowElapsed()
+                isRunning = false
+                startBtn.isEnabled = true
+                startBtn.text = "開始"
+                startBtn.backgroundTintList =
+                    ColorStateList.valueOf(Color.parseColor("#0066FF"))
+                return@setOnClickListener
+            }
+        
             AlertDialog.Builder(this)
                 .setTitle("確認")
                 .setMessage("タイマーを終了しますか？")
