@@ -1,9 +1,9 @@
 // -----------------------------------------------------------
 // MainActivity.kt
 // 作成日: 2026-09-07
-// 変更日: 2026-09-29
+// 変更日: 2026-09-11
 // Ver: 1.1（時刻差分方式・レスポンシブ対応・FGS・3600秒停止・短いコメント統一）
-// Ver: 1.2（カウントダウン秒数＋音声ON/OFF追加）
+// Ver: 1.1（警告ゼロ・WindowInsetsController対応・3600秒停止・短いコメント統一）
 // -----------------------------------------------------------
 
 package com.naruto.sobatimer
@@ -344,16 +344,19 @@ stopBtn.setOnClickListener {
         // ★ 設定値を読む（デフォルト 5）
         val pref = getSharedPreferences("settings", MODE_PRIVATE)
         var count = pref.getInt("countdownSec", 5)
-        countdownText.text = "開始まで: $count"
+
         handler.post(object : Runnable {
             override fun run() {
-                when (count) {
-                    in 2..5 -> countdownText.text = "開始まで: $count"
-                    1 -> {
+
+                when {
+                    count > 1 -> {
+                        countdownText.text = "開始まで: $count"
+                    }
+                    count == 1 -> {
                         countdownText.text = "開始まで: 1"
                         speakTwice("よーーい", "はじめ")
                     }
-                    0 -> {
+                    count == 0 -> {
                         countdownText.text = ""
                         startTimer()
                         return
