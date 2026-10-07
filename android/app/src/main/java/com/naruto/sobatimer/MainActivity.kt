@@ -308,6 +308,10 @@ stopBtn.setOnClickListener {
 
     private fun loadSettings() {
         val pref = getSharedPreferences("settings", MODE_PRIVATE)
+        // カウントダウン秒数
+        val count = pref.getInt("countdownSec", 5)
+        if (count == 0) {countdownText.text = ""}
+        else {countdownText.text = "開始まで: $count"}
         minA = pref.getInt("minA", 600)
         msgA1 = pref.getString("msgA1", "10分経過")!!
         msgA2 = pref.getString("msgA2", "10分経過です")!!
@@ -347,7 +351,8 @@ stopBtn.setOnClickListener {
 
         handler.post(object : Runnable {
             override fun run() {
-
+                // ★ 終了ボタンで止めるために追加
+                if (!isRunning) return
                 when {
                     count > 1 -> {
                         countdownText.text = "開始まで: $count"
