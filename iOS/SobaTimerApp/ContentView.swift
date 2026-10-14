@@ -41,11 +41,12 @@ struct ContentView: View {
     @AppStorage("msgC2") private var msgC2 = "30分経過です"
     
     @AppStorage("countdownSec") private var countdownSec = 5
-    @AppStorage("voiceEnabled") private var voiceEnabled = true
     @AppStorage("timerFontSize") private var timerFontSize = 100
     // ★追加：終了時間（40 / 35 / 30）
     @AppStorage("finishMin") private var finishMin = 40
-    @AppStorage("skipConfirm") private var skipConfirm = false   // ← ★追加    
+    @AppStorage("skipConfirm") private var skipConfirm = false   // ← ★追加
+    @AppStorage("voiceVolume") private var voiceVolume = 100   // 0〜150
+    
     @StateObject private var speechManager = SpeechManager()
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -114,13 +115,17 @@ struct ContentView: View {
 
                     // 中央：巨大タイマー
                     VStack(spacing: 40) {
-
-                        if isCountingDown {
-                            Text("開始まで: \(countdown)")
-                                .font(.system(size: geo.size.height * 0.06))
-                                .foregroundColor(.red)
+                        // カウントダウン表示の高さを固定
+                        ZStack {
+                            if isCountingDown {
+                                Text("開始まで: \(countdown)")
+                                    .font(.system(size: geo.size.height * 0.08))
+                                    .foregroundColor(.red)
+                                    .offset(y: geo.size.height * 0.12)   // ← ★ここで 1 行下げる
+                            }
                         }
-
+                        .frame(height: geo.size.height * 0.06)   // ← ★高さ固定
+                        
                         Text(timeString(seconds))
                             .font(.system(size: geo.size.height * 0.50 * (CGFloat(timerFontSize) / 100)))
                             .monospacedDigit() // ★秒数変化による左右ガタつき防止
@@ -130,6 +135,8 @@ struct ContentView: View {
                             .lineLimit(1)
                             .id(timerFontSize)
                     }
+                    .offset(y: -geo.size.height * 0.08)   // ← ★ここで 1 行分上に移動
+                    .allowsHitTesting(false)   // ← これでボタンが押せるようになる
                     .frame(width: geo.size.width, height: geo.size.height)
                 }
             }
@@ -262,11 +269,13 @@ struct ContentView: View {
             stopPressed()
         }
     }
-    func speakTwice(_ first: String, _ second: String) {
-        // ★音声OFFなら何も喋らない
-        if !voiceEnabled { return }
 
-        speechManager.speakTwice(first, second)
+    func speakTwice(_ first: String, _ second: String) {
+        // ★音量0なら完全ミュート
+        if voiceVolume == 0 { return }
+        let volume = Float(voiceVolume) / 100.0
+        speechManager.speakTwice(first, second,
+                                 volume: volume)
     }
 }
 
@@ -275,7 +284,8 @@ struct ContentView: View {
 struct SettingsView: View {
 
     @Environment(\.rotationLock) var rotationLock
-
+    @Environment(\.dismiss) private var dismiss
+    
     @AppStorage("minA") private var minA = 600
     @AppStorage("msgA1") private var msgA1 = "10分経過"
     @AppStorage("msgA2") private var msgA2 = "10分経過です"
@@ -289,9 +299,9 @@ struct SettingsView: View {
     @AppStorage("msgC2") private var msgC2 = "30分経過です"
     
     @AppStorage("countdownSec") private var countdownSec = 5
-    @AppStorage("voiceEnabled") private var voiceEnabled = true
     @AppStorage("timerFontSize") private var timerFontSize = 100
-    @AppStorage("skipConfirm") private var skipConfirm = false   // ← ★追加    
+    @AppStorage("skipConfirm") private var skipConfirm = false   // ← ★追加
+    @AppStorage("voiceVolume") private var voiceVolume = 100   // 0〜150
     // ★追加：終了時間選択
     @AppStorage("finishMin") private var finishMin = 40
     @State private var showResetAlert = false
@@ -402,12 +412,46 @@ struct SettingsView: View {
                         .textFieldStyle(.roundedBorder)
                 }
 
-                // Toggles
-                Toggle("音声ガイドを有効にする", isOn: $voiceEnabled)
-                    .foregroundColor(.white)
+                // ★ここから音声設定（追加する場所はここ！）
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("音量")
+                        .foregroundColor(.white)
+                        .font(.title3)
+
+                    HStack(spacing: 8) {
+                        Slider(
+                            value: Binding(
+                                get: { Double(voiceVolume) },
+                                set: { voiceVolume = Int($0) }
+                            ),
+                            in: 0...150
+                        )
+                        Text("\(voiceVolume)")
+                            .foregroundColor(.white)
+                            .frame(width: 50)
+                    }
+                }
+                // ★ここにテスト再生ボタンを追加（最もわかりやすい位置）
+                Button(action: {
+                    let volume = Float(voiceVolume) / 100.0
+                    let tester = SpeechManager()
+                    tester.speakTwice(msgA1, "",
+                                      volume: volume)
+                }) {
+                    Text("テスト再生")
+                        .font(.title3)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(Color.blue.opacity(0.7))
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                .padding(.top, 8)
+
 
                 Toggle("終了時の確認メッセージを省略", isOn: $skipConfirm)
                     .foregroundColor(.white)
+
 
                 // 保存ボタン
                 Button(action: saveSettings) {
@@ -447,7 +491,9 @@ struct SettingsView: View {
           .onAppear { rotationLock.lockPortrait() }      // 設定画面を開いたら「縦」
     }
 
-    func saveSettings() {}
+    func saveSettings() {
+        dismiss()
+    }
 
     func resetSettings() {
         minA = 600
@@ -462,9 +508,9 @@ struct SettingsView: View {
         msgC1 = "30分経過"
         msgC2 = "30分経過です"
         countdownSec = 5
-        voiceEnabled = true
         finishMin = 40
         skipConfirm = false
+        voiceVolume = 100
     }
 }
 
@@ -534,7 +580,10 @@ class SpeechManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
         synthesizer.delegate = self
     }
     
-    func speakTwice(_ first: String, _ second: String) {
+    func speakTwice(_ first: String,
+                    _ second: String,
+                    volume: Float) {
+
         do {
             let session = AVAudioSession.sharedInstance()
             try session.setCategory(.playback, mode: .default, options: [.duckOthers])
@@ -542,16 +591,22 @@ class SpeechManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
         } catch {
             print("オーディオセッションの設定に失敗しました: \(error)")
         }
-        
-        let utterance1 = AVSpeechUtterance(string: first)
-        utterance1.voice = AVSpeechSynthesisVoice(language: "ja-JP")
-        synthesizer.speak(utterance1)
-        
+
+        let u1 = AVSpeechUtterance(string: first)
+        u1.voice = AVSpeechSynthesisVoice(language: "ja-JP")
+
+        // ★安全な範囲にクリップ
+        u1.volume = max(0.0, min(volume, 1.5))
+        synthesizer.speak(u1)
+
         if !second.isEmpty {
-            let utterance2 = AVSpeechUtterance(string: second)
-            utterance2.voice = AVSpeechSynthesisVoice(language: "ja-JP")
-            utterance2.postUtteranceDelay = 0.4
-            synthesizer.speak(utterance2)
+            let u2 = AVSpeechUtterance(string: second)
+            u2.voice = AVSpeechSynthesisVoice(language: "ja-JP")
+            u2.volume = u1.volume
+            u2.postUtteranceDelay = 0.4
+            synthesizer.speak(u2)
         }
     }
+
+    
 }

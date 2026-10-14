@@ -232,16 +232,31 @@
             android:layout_height="2dp"
             android:background="#000000" />
 
-        <!-- ★ 音声ガイド ON/OFF -->
-        <Switch
-            android:id="@+id/soundSwitch"
+        <TextView
+            android:id="@+id/volumeLabel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="音声ガイドを使う"
+            android:text="音量: 100"
             android:textColor="#FFFFFF"
             android:textSize="18sp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp" />
+            android:paddingTop="10dp" />
+
+        <SeekBar
+            android:id="@+id/volumeSeek"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="150"
+            android:progress="100" />
+
+        <Button
+            android:id="@+id/testPlayBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="テスト再生"
+            android:textSize="18sp"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/btn_round"
+            android:layout_marginTop="12dp" />
 
         <!-- ★ 終了時の確認メッセージを省略する（テキストのみ広く） -->
         <Switch

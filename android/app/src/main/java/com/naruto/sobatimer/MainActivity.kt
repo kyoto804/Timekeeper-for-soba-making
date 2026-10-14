@@ -1,10 +1,27 @@
-// -----------------------------------------------------------
-// MainActivity.kt
-// 作成日: 2026-09-07
-// 変更日: 2026-09-11
-// Ver: 1.1（時刻差分方式・レスポンシブ対応・FGS・3600秒停止・短いコメント統一）
-// Ver: 1.1（警告ゼロ・WindowInsetsController対応・3600秒停止・短いコメント統一）
-// -----------------------------------------------------------
+/* -----------------------------------------------------------
+   MainActivity.kt
+   作成日: 2026-09-07
+   更新日: 2026-10-15
+
+   Ver 1.1
+     - 時刻差分方式に変更
+     - レスポンシブ対応
+     - Foreground Service 対応
+     - 3600秒で自動停止
+     - コメント統一（短文化）
+     - WindowInsetsController 対応
+
+   Ver 1.4
+     - 音量設定を追加（SettingsActivity と連動）
+
+   機能概要
+     - フォント指定 / カウントダウン秒数設定 / 音声 ON/OFF
+     - 10分・20分・30分の経過時間を音声案内
+     - 35〜40分の残り時間を自動アナウンス
+     - そば打ち中でも見やすい大きな画面
+     - 時間とメッセージを自由に設定可能
+----------------------------------------------------------- */
+
 
 package com.naruto.sobatimer
 
@@ -328,18 +345,24 @@ stopBtn.setOnClickListener {
     
         // ★ 設定値を読む（音声ON/OFF）
         val pref = getSharedPreferences("settings", MODE_PRIVATE)
-        val soundEnabled = pref.getBoolean("soundEnabled", true)
-        // ★ OFF の場合は完全に無音
-        if (!soundEnabled) return
-    
-        tts.speak(first, TextToSpeech.QUEUE_FLUSH, null, null)
+        val volume = pref.getInt("voiceVolume", 100) / 100f
+
+        // 音量0なら完全ミュート
+        if (volume <= 0f) return
+
+        val safeVolume = volume.coerceIn(0.0f, 1.0f)
+
+        val params = Bundle()
+        params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, safeVolume)
+
+        tts.speak(first, TextToSpeech.QUEUE_FLUSH, params, "utt1")
         val delay = when {
             first.length <= 6 -> 350L
             first.length <= 12 -> 500L
             else -> 700L
         }
         handler.postDelayed({
-            tts.speak(second, TextToSpeech.QUEUE_ADD, null, null)
+            tts.speak(second, TextToSpeech.QUEUE_ADD, params, "utt2")
         }, delay)
     }
 
