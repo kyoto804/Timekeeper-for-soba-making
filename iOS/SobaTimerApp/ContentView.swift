@@ -8,6 +8,7 @@
 //  【追加機能】
 //  ・終了時間（40 / 35 / 30）の選択機能を追加
 //  ・終了時の確認メッセージを省略
+//  ・一時停止機能追加
 import SwiftUI
 import AVFoundation
 import Combine
@@ -22,11 +23,12 @@ struct ContentView: View {
     @State private var isRunning = false
     @State private var countdown = 5
     @State private var isCountingDown = false
-
     @State private var timerColor = Color.white
     @State private var startTime: Date?
-
     @State private var showStopAlert = false
+    @State private var isPaused = false
+    @State private var pausedAt: Date?
+    @State private var showPauseConfirm = false   // ★追加：一時停止の確認ダイアログ
 
     @AppStorage("minA") private var minA = 600
     @AppStorage("msgA1") private var msgA1 = "10分経過"
@@ -59,21 +61,25 @@ struct ContentView: View {
                 GeometryReader { geo in
 
                     // 左上：開始ボタン
-                    Button(isRunning || isCountingDown ? "計測中" : "開始") { startPressed() }
+                    Button(isRunning || isCountingDown || isPaused ? "計測中" : "開始") {
+                        if !isPaused {   // ★一時停止中は開始させない
+                            startPressed()
+                        }
+                    }
                         .font(.system(size: geo.size.height * 0.05))
                         .padding()
                         .background(
-                            (isRunning || isCountingDown)
+                            (isRunning || isCountingDown || isPaused)
                                 ? Color.gray.opacity(0.3)
                                 : Color.blue
                         )
                         .foregroundColor(
-                            (isRunning || isCountingDown)
+                            (isRunning || isCountingDown || isPaused)
                                 ? Color.white.opacity(0.4)
                                 : Color.white
                         )
                         .cornerRadius(10)
-                        .disabled(isRunning || isCountingDown)
+                        .disabled(isRunning || isCountingDown || isPaused)
                         .position(x: geo.size.width * 0.15,
                                   y: geo.size.height * 0.15)
 
@@ -102,7 +108,31 @@ struct ContentView: View {
                         .cornerRadius(10)
                         .position(x: geo.size.width * 0.15,
                                   y: geo.size.height * 0.85)
-
+                                  
+                    // 下部中央：一時停止／再開ボタン
+                    if isRunning || isPaused {
+                        Button(isPaused ? "再開" : "一時停止") {
+                            if isPaused {
+                                // 再開は即実行
+                                pauseResumePressed()
+                            } else {
+                                // 一時停止は YES/NO を出す
+                                showPauseConfirm = true
+                            }
+                        }
+                        .font(.system(size: geo.size.height * 0.05))
+                        .padding()
+                        .background(
+                            isPaused
+                                ? Color.green.opacity(0.8)   // ★再開＝緑
+                                : Color.yellow.opacity(0.8)  // ★一時停止＝黄色
+                        )
+                        .foregroundColor(.black)
+                        .cornerRadius(10)
+                        .position(x: geo.size.width * 0.50,
+                                  y: geo.size.height * 0.85)
+                        .disabled(!isRunning && !isPaused)
+                    }
                     // 右下：仕様ボタン
                     NavigationLink("仕様", destination: SpecView())
                         .font(.system(size: geo.size.height * 0.05))
@@ -153,6 +183,10 @@ struct ContentView: View {
                 Button("終了する", role: .destructive) { stopPressed() }
                 Button("キャンセル", role: .cancel) {}
             }
+            .alert("一時停止しますか？", isPresented: $showPauseConfirm) {
+                Button("停止する", role: .destructive) { pauseResumePressed() }
+                Button("キャンセル", role: .cancel) {}
+            }
         }
     }
 
@@ -172,11 +206,12 @@ struct ContentView: View {
         UIApplication.shared.isIdleTimerDisabled = false
         isRunning = false
         isCountingDown = false
-
+        isPaused = false
         timerColor = .green
     }
 
     func tick() {
+        if isPaused { return }   // ★追加：一時停止中は止める
 
         if isCountingDown {
             if countdown == 1 {
@@ -276,6 +311,28 @@ struct ContentView: View {
         let volume = Float(voiceVolume) / 100.0
         speechManager.speakTwice(first, second,
                                  volume: volume)
+    }
+    func pauseResumePressed() {
+        if isPaused {
+            // ▼ 再開
+            if let pausedAt = pausedAt, let start = startTime {
+                let pausedDuration = Date().timeIntervalSince(pausedAt)
+                startTime = start.addingTimeInterval(pausedDuration)
+            }
+            isPaused = false
+            pausedAt = nil
+            isRunning = true
+
+            timerColor = .white   // ★再開 → 白に戻す
+
+        } else {
+            // ▼ 一時停止
+            pausedAt = Date()
+            isPaused = true
+            isRunning = false
+
+            timerColor = .orange  // ★一時停止 → オレンジ
+        }
     }
 }
 
@@ -447,7 +504,6 @@ struct SettingsView: View {
                         .cornerRadius(8)
                 }
                 .padding(.top, 8)
-
 
                 Toggle("終了時の確認メッセージを省略", isOn: $skipConfirm)
                     .foregroundColor(.white)
