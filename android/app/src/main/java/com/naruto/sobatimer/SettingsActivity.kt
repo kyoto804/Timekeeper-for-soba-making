@@ -71,8 +71,6 @@ class SettingsActivity : AppCompatActivity() {
             30 -> finishGroup.check(R.id.rb30)
         }
 
-        skipConfirmSwitch.isChecked = pref.getBoolean("skipConfirm", false)
-
         val currentVolume = pref.getInt("voiceVolume", 100)
         volumeSeek.progress = currentVolume
         volumeLabel.text = "音量: $currentVolume"
@@ -112,6 +110,8 @@ class SettingsActivity : AppCompatActivity() {
                 }
             }
         }
+        skipConfirmSwitch.isChecked = pref.getBoolean("skipConfirm", false)
+
         // -----------------------------------------------------------
         // 保存
         // -----------------------------------------------------------

@@ -52,6 +52,7 @@ import androidx.core.content.ContextCompat
 import java.util.Locale
 import android.content.res.ColorStateList
 import android.view.View
+import androidx.activity.enableEdgeToEdge
 
 class MainActivity : AppCompatActivity() {
 
@@ -70,6 +71,7 @@ class MainActivity : AppCompatActivity() {
     private var seconds = 0
     private var isRunning = false
     private var isPaused = false
+    private var isFinished = false
     private var startTime: Long = 0L
     private var pausedAt: Long = 0L
 
@@ -157,9 +159,9 @@ class MainActivity : AppCompatActivity() {
 
     // onCreate
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
         pref = getSharedPreferences("settings", MODE_PRIVATE)
         hideSystemBars()
 
@@ -234,7 +236,8 @@ class MainActivity : AppCompatActivity() {
             startBtn.text = "計測中"
             startBtn.backgroundTintList =
                 ColorStateList.valueOf(Color.parseColor("#444444"))
-
+            isFinished = false
+            stopBtn.text = "終了"
 
             seconds = 0
             timerText.text = "00:00"
@@ -260,8 +263,11 @@ class MainActivity : AppCompatActivity() {
 
         // 終了
         stopBtn.setOnClickListener {
+            if (isFinished) {
+                resetTimer()
+                return@setOnClickListener
+            }
             val skipConfirm = pref.getBoolean("skipConfirm", false)
-
             if (skipConfirm) {
                 stopTimerAndShowElapsed()
                 isRunning = false
@@ -290,7 +296,19 @@ class MainActivity : AppCompatActivity() {
         // 一時停止 / 再開
         pauseBtn.setOnClickListener {
             if (!isPaused) {
+                val skipConfirm = pref.getBoolean("skipConfirm", false)
+                if (skipConfirm) {
+                    isPaused = true
+                    pausedAt = System.currentTimeMillis()
+                    isRunning = false
 
+                    pauseBtn.text = "再開"
+                    pauseBtn.backgroundTintList =
+                        ColorStateList.valueOf(Color.parseColor("#00CC66"))
+
+                    timerText.setTextColor(Color.parseColor("#FFA500"))
+                    return@setOnClickListener
+                }
                 AlertDialog.Builder(this)
                     .setTitle("確認")
                     .setMessage("一時停止しますか？")
@@ -347,9 +365,11 @@ class MainActivity : AppCompatActivity() {
         val pref = getSharedPreferences("settings", MODE_PRIVATE)
 
         val count = pref.getInt("countdownSec", 5)
-        countdownText.text =
-            if (count == 0) "" else "開始まで: $count"
-
+        
+        // ★ タイマーが実際に計測中や一時停止中でなければ、常に最新の設定秒数を反映する
+        if (!isRunning || !isPaused) {
+            countdownText.text = if (count == 0) "" else "開始まで: $count"
+        }
         minA = pref.getInt("minA", 600)
         msgA1 = pref.getString("msgA1", "10分経過")!!
         msgA2 = pref.getString("msgA2", "10分経過です")!!
@@ -456,7 +476,8 @@ class MainActivity : AppCompatActivity() {
         timerText.text = String.format("%02d:%02d", min, sec)
 
         startBtn.isEnabled = true
-
+        isFinished = true
+        stopBtn.text = "リセット"
         // ★ 終了時に pauseBtn を非表示に戻す
         pauseBtn.visibility = View.INVISIBLE
         pauseBtn.isEnabled = false
@@ -464,7 +485,33 @@ class MainActivity : AppCompatActivity() {
         pauseBtn.backgroundTintList =
             ColorStateList.valueOf(Color.parseColor("#CCCC00"))
     }
+    private fun resetTimer() {
+        seconds = 0
 
+        isRunning = false
+        isPaused = false
+        isFinished = false
+
+        startTime = 0L
+        pausedAt = 0L
+
+        timerText.text = "00:00"
+        timerText.setTextColor(Color.WHITE)
+
+        stopBtn.text = "終了"
+
+        pauseBtn.visibility = View.INVISIBLE
+        pauseBtn.isEnabled = false
+
+        startBtn.isEnabled = true
+        startBtn.text = "開始"
+        startBtn.backgroundTintList =
+        ColorStateList.valueOf(Color.parseColor("#0066FF"))
+        // ★ リセット時にも設定からカウントダウン秒数を読み込んで表示を復元する
+        val pref = getSharedPreferences("settings", MODE_PRIVATE)
+        val count = pref.getInt("countdownSec", 5)
+        countdownText.text = if (count == 0) "" else "開始まで: $count"
+    }
     override fun onDestroy() {
         tts.shutdown()
         super.onDestroy()

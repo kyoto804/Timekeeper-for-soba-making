@@ -51,7 +51,6 @@ struct ContentView: View {
     
     @StateObject private var speechManager = SpeechManager()
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-
     var body: some View {
 
         NavigationStack {
@@ -61,31 +60,33 @@ struct ContentView: View {
                 GeometryReader { geo in
 
                     // 左上：開始ボタン
-                    Button(isRunning || isCountingDown || isPaused ? "計測中" : "開始") {
+                    Button(isRunning  || isPaused ? "計測中" : "開始") {
                         if !isPaused {   // ★一時停止中は開始させない
                             startPressed()
                         }
                     }
                         .font(.system(size: geo.size.height * 0.05))
+                        .frame(width: geo.size.height * 0.19)
                         .padding()
                         .background(
-                            (isRunning || isCountingDown || isPaused)
+                            (isRunning  || isPaused)
                                 ? Color.gray.opacity(0.3)
                                 : Color.blue
                         )
                         .foregroundColor(
-                            (isRunning || isCountingDown || isPaused)
+                            (isRunning || isPaused)
                                 ? Color.white.opacity(0.4)
                                 : Color.white
                         )
                         .cornerRadius(10)
-                        .disabled(isRunning || isCountingDown || isPaused)
+                        .disabled(isRunning || isPaused)
                         .position(x: geo.size.width * 0.15,
                                   y: geo.size.height * 0.15)
 
                     // 右上：設定ボタン
                     NavigationLink("設定", destination: SettingsView())
                         .font(.system(size: geo.size.height * 0.05))
+                        .frame(width: geo.size.height * 0.19)
                         .padding()
                         .background(Color.gray.opacity(0.4))
                         .foregroundColor(.white)
@@ -94,14 +95,19 @@ struct ContentView: View {
                                   y: geo.size.height * 0.15)
 
                     // 左下：終了ボタン（目立つ赤色）
-                    Button("終了") {
-                        if skipConfirm {
-                            stopPressed()   // ← 即終了
+                    Button(isRunning || isPaused ? "終了" : "リセット") {
+                        if isRunning || isPaused {
+                            if skipConfirm {
+                                stopPressed()
+                            } else {
+                                showStopAlert = true
+                            }
                         } else {
-                            showStopAlert = true
+                            resetPressed()
                         }
                     }
                         .font(.system(size: geo.size.height * 0.05))
+                        .frame(width: geo.size.height * 0.19)
                         .padding()
                         .background(Color.red.opacity(0.8))
                         .foregroundColor(.white)
@@ -110,17 +116,22 @@ struct ContentView: View {
                                   y: geo.size.height * 0.85)
                                   
                     // 下部中央：一時停止／再開ボタン
-                    if isRunning || isPaused {
+                    if (isRunning || isPaused) && !isCountingDown{
                         Button(isPaused ? "再開" : "一時停止") {
                             if isPaused {
                                 // 再開は即実行
                                 pauseResumePressed()
                             } else {
-                                // 一時停止は YES/NO を出す
-                                showPauseConfirm = true
+                                // 一時停止
+                                if skipConfirm {
+                                    pauseResumePressed()
+                                } else {
+                                    showPauseConfirm = true
+                                }                            
                             }
                         }
                         .font(.system(size: geo.size.height * 0.05))
+                        .frame(width: geo.size.height * 0.20)
                         .padding()
                         .background(
                             isPaused
@@ -136,6 +147,7 @@ struct ContentView: View {
                     // 右下：仕様ボタン
                     NavigationLink("仕様", destination: SpecView())
                         .font(.system(size: geo.size.height * 0.05))
+                        .frame(width: geo.size.height * 0.19)
                         .padding()
                         .background(Color.gray.opacity(0.4))
                         .foregroundColor(.white)
@@ -147,7 +159,7 @@ struct ContentView: View {
                     VStack(spacing: 40) {
                         // カウントダウン表示の高さを固定
                         ZStack {
-                            if isCountingDown {
+                            if isCountingDown && countdownSec > 0 {
                                 Text("開始まで: \(countdown)")
                                     .font(.system(size: geo.size.height * 0.08))
                                     .foregroundColor(.red)
@@ -172,7 +184,13 @@ struct ContentView: View {
             }
             .onReceive(timer) { _ in tick() }
             // タイマー表示時は「横」
-            .onAppear {rotationLock.lockLandscape()}
+            // 【変更後】（計測中・一時停止中・カウントダウン中でなければリセット処理を行う）
+            .onAppear {
+                rotationLock.lockLandscape()
+                if !isRunning && !isPaused {
+                    resetPressed()
+                }
+            }
             // バー類の完全非表示
             .toolbar(.hidden, for: .navigationBar)
             .statusBarHidden(true)
@@ -180,11 +198,11 @@ struct ContentView: View {
 
             // 終了確認ダイアログ
             .alert("終了しますか？", isPresented: $showStopAlert) {
-                Button("終了する", role: .destructive) { stopPressed() }
+                Button("終了", role: .destructive) { stopPressed() }
                 Button("キャンセル", role: .cancel) {}
             }
             .alert("一時停止しますか？", isPresented: $showPauseConfirm) {
-                Button("停止する", role: .destructive) { pauseResumePressed() }
+                Button("停止", role: .destructive) { pauseResumePressed() }
                 Button("キャンセル", role: .cancel) {}
             }
         }
@@ -194,14 +212,13 @@ struct ContentView: View {
         seconds = 0
         timerColor = .white
         startTime = nil
-
-        isCountingDown = true
+        isRunning = true
         // ★固定値 5 → 設定値 countdownSec
         countdown = countdownSec
-
-        speakTwice("準備が整ったようですので開始します", "")
+        if countdownSec > 0 {
+            speakTwice("準備が整ったようですので開始します", "")
+        }
     }
-
     func stopPressed() {
         UIApplication.shared.isIdleTimerDisabled = false
         isRunning = false
@@ -211,7 +228,7 @@ struct ContentView: View {
     }
 
     func tick() {
-        if isPaused { return }   // ★追加：一時停止中は止める
+        if isPaused || !isRunning{ return }   // ★追加：一時停止中は止める
 
         if isCountingDown {
             if countdown == 1 {
@@ -237,7 +254,7 @@ struct ContentView: View {
         UIApplication.shared.isIdleTimerDisabled = true
         startTime = Date()
         seconds = 0
-        isRunning = true
+        //isRunning = true
         timerColor = .white
     }
 
@@ -334,6 +351,20 @@ struct ContentView: View {
             timerColor = .orange  // ★一時停止 → オレンジ
         }
     }
+    func resetPressed() {
+
+        seconds = 0
+
+        startTime = nil
+        pausedAt = nil
+
+        isRunning = false
+        isPaused = false
+        isCountingDown = true
+        countdown = countdownSec
+
+        timerColor = .white
+    }
 }
 
 // MARK: - 設定画面（縦固定）
@@ -362,7 +393,8 @@ struct SettingsView: View {
     // ★追加：終了時間選択
     @AppStorage("finishMin") private var finishMin = 40
     @State private var showResetAlert = false
-
+    @StateObject private var tester = SpeechManager()
+    
     var body: some View {
 
         ScrollView {
@@ -491,9 +523,7 @@ struct SettingsView: View {
                 // ★ここにテスト再生ボタンを追加（最もわかりやすい位置）
                 Button(action: {
                     let volume = Float(voiceVolume) / 100.0
-                    let tester = SpeechManager()
-                    tester.speakTwice(msgA1, "",
-                                      volume: volume)
+                    tester.speakTwice(msgA1,msgA2,volume: volume)
                 }) {
                     Text("テスト再生")
                         .font(.title3)
