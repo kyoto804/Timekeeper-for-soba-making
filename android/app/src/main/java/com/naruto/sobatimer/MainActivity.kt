@@ -1,32 +1,38 @@
 /* -----------------------------------------------------------
    MainActivity.kt
    作成日: 2026-09-07
-   更新日: 2026-10-15
+   更新日: 2026-10-25
 
    Ver 1.1
-     - 時刻差分方式に変更
-     - レスポンシブ対応
-     - Foreground Service 対応
-     - 3600秒で自動停止
-     - コメント統一（短文化）
-     - WindowInsetsController 対応
+      - 時刻差分方式に変更
+      - レスポンシブ対応
+      - Foreground Service 対応
+      - 3600秒で自動停止
+      - コメント統一（短文化）
+      - WindowInsetsController 対応
 
    Ver 1.4
-     - 音量設定を追加（SettingsActivity と連動）
+      - 音量設定を追加（SettingsActivity と連動）
 
    Ver 1.5
-     - 一時停止機能を追加（開始後に表示／停止→再開／終了で非表示）
-     - 一時停止前に確認ダイアログを追加
-     - 一時停止中はタイマー色をオレンジに変更
-     - 再開時はタイマー色を白に戻す
+      - 一時停止機能を追加（開始後に表示／停止→再開／終了で非表示）
+      - 一時停止前に確認ダイアログを追加
+      - 一時停止中はタイマー色をオレンジに変更
+      - 再開時はタイマー色を白に戻す
+
+   Ver 2.0
+      - 経過時間（カウントダウン機能）の選択に対応
+      - 設定画面で選択されたモード（カウントアップ／カウントダウン）を自動反映
+      - 終了時間として45分・50分・55分の選択肢をフルサポート
 
    機能概要
-     - フォント指定 / カウントダウン秒数設定 / 音声 ON/OFF
-     - 10分・20分・30分の経過時間を音声案内
-     - 35〜40分の残り時間を自動アナウンス
-     - そば打ち中でも見やすい大きな画面
-     - 時間とメッセージを自由に設定可能
-     - 一時停止／再開機能（Ver 1.5）
+      - フォント指定 / カウントダウン秒数設定 / 音声 ON/OFF
+      - 10分・20分・30分の経過時間を音声案内
+      - 35〜55分の残り時間を自動アナウンス
+      - そば打ち中でも見やすい大きな画面
+      - 時間とメッセージを自由に設定可能
+      - 一時停止／再開機能（Ver 1.5）
+      - カウントダウン機能の選択対応（Ver 2.0）
 ----------------------------------------------------------- */
 
 package com.naruto.sobatimer
@@ -75,7 +81,10 @@ class MainActivity : AppCompatActivity() {
     private var startTime: Long = 0L
     private var pausedAt: Long = 0L
 
-    // 設定値
+    // 設定値（変数としてあらかじめ保持）
+    private var finishMin = 40
+    private var isCountdown = false
+    private var countdownSec = 5
     private var minA = 600
     private var minB = 1200
     private var minC = 1800
@@ -91,17 +100,35 @@ class MainActivity : AppCompatActivity() {
     // タイマーRunnable
     private val timerRunnable = object : Runnable {
         override fun run() {
-
             if (!isRunning) return
             if (isPaused) return
 
             val now = System.currentTimeMillis()
             seconds = ((now - startTime) / 1000).toInt()
 
-            val min = seconds / 60
-            val sec = seconds % 60
+            val finishSec = finishMin * 60
 
-            if (seconds == 2400) timerText.setTextColor(Color.RED)
+            val displaySec: Int
+            if (isCountdown) {
+                // カウントダウン（残り時間）
+                displaySec = finishSec - seconds
+                if (displaySec <= 0) {
+                    timerText.text = "00:00"
+                    timerText.setTextColor(Color.RED)
+                    stopTimerAndShowElapsed()
+                    return
+                }
+            } else {
+                // カウントアップ（経過時間）
+                displaySec = seconds
+                if (seconds == finishSec) {
+                    timerText.setTextColor(Color.RED)
+                }
+            }
+
+            val min = displaySec / 60
+            val sec = displaySec % 60
+
             timerText.text = String.format("%02d:%02d", min, sec)
 
             messages[seconds]?.let { (first, second) ->
@@ -120,23 +147,29 @@ class MainActivity : AppCompatActivity() {
     // メッセージ一覧
     private val messages: Map<Int, Pair<String, String>>
         get() {
-            val finishMin = pref.getInt("finishMin", 40)
             val finishSec = finishMin * 60
 
             val remain5Sec: Int
             val remain5Msg1: String
 
             when (finishMin) {
+                55 -> { remain5Sec = 3000; remain5Msg1 = "50分経過" }
+                50 -> { remain5Sec = 2700; remain5Msg1 = "45分経過" }
+                45 -> { remain5Sec = 2400; remain5Msg1 = "40分経過" }
                 40 -> { remain5Sec = 2100; remain5Msg1 = "35分経過" }
                 35 -> { remain5Sec = 1800; remain5Msg1 = "30分経過" }
-                30 -> { remain5Sec = 1500; remain5Msg1 = "25分経過" }
+                30 -> { remain5Sec = 1500; remain5Msg1 = "25分経過" }            
                 else -> { remain5Sec = 2100; remain5Msg1 = "35分経過" }
             }
 
-            val cMessage = if (finishMin == 40) {
+            val cMessage = if (finishMin >= 40) {
                 mapOf(minC to Pair(msgC1, msgC2))
             } else emptyMap()
 
+            val dMessage = if (finishMin >= 50) {
+                mapOf(2400 to Pair("40分", "40分経過です"))
+            } else emptyMap()
+            
             return mapOf(
                 minA to Pair(msgA1, msgA2),
                 minB to Pair(msgB1, msgB2),
@@ -154,7 +187,7 @@ class MainActivity : AppCompatActivity() {
 
                 finishSec to Pair("終了", "終了です"),
                 3600 to Pair("60分経過しました。終了します。", "お疲れさまでした")
-            ) + cMessage
+            ) + cMessage + dMessage
         }
 
     // onCreate
@@ -191,7 +224,7 @@ class MainActivity : AppCompatActivity() {
         specBtn = findViewById(R.id.specBtn)
         pauseBtn = findViewById(R.id.pauseBtn)
 
-        // ★ pauseBtn 初期化（ここだけ）
+        // pauseBtn 初期化
         pauseBtn.isEnabled = false
         pauseBtn.visibility = View.INVISIBLE
         pauseBtn.backgroundTintList =
@@ -213,7 +246,6 @@ class MainActivity : AppCompatActivity() {
             specBtn.x = w * 0.80f
             specBtn.y = h * 0.80f
 
-            // pauseBtn の位置だけ設定（初期化は onCreate のみ）
             pauseBtn.x = w * 0.425f
             pauseBtn.y = h * 0.80f
 
@@ -240,7 +272,13 @@ class MainActivity : AppCompatActivity() {
             stopBtn.text = "終了"
 
             seconds = 0
-            timerText.text = "00:00"
+
+            if (isCountdown) {
+                finishMin = pref.getInt("finishMin", 40)
+                timerText.text = String.format("%02d:00", finishMin)
+            } else {
+                timerText.text = "00:00"
+            }
             timerText.setTextColor(Color.WHITE)
 
             handler.removeCallbacks(timerRunnable)
@@ -248,7 +286,6 @@ class MainActivity : AppCompatActivity() {
 
             speakTwice("準備が整ったようですので開始します", "")
             startCountdown()
-
         }
 
         // 設定
@@ -362,14 +399,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadSettings() {
-        val pref = getSharedPreferences("settings", MODE_PRIVATE)
+        // 設定値を一度まとめて読み込み、変数にキャッシュする
+        finishMin = pref.getInt("finishMin", 40)
+        isCountdown = pref.getBoolean("isCountdown", false)
+        countdownSec = pref.getInt("countdownSec", 5)
 
-        val count = pref.getInt("countdownSec", 5)
-        
-        // ★ タイマーが実際に計測中や一時停止中でなければ、常に最新の設定秒数を反映する
-        if (!isRunning || !isPaused) {
-            countdownText.text = if (count == 0) "" else "開始まで: $count"
-        }
         minA = pref.getInt("minA", 600)
         msgA1 = pref.getString("msgA1", "10分経過")!!
         msgA2 = pref.getString("msgA2", "10分経過です")!!
@@ -381,12 +415,21 @@ class MainActivity : AppCompatActivity() {
         minC = pref.getInt("minC", 1800)
         msgC1 = pref.getString("msgC1", "30分経過")!!
         msgC2 = pref.getString("msgC2", "30分経過です")!!
+
+        if (!isRunning && !isPaused) {
+            countdownText.text = if (countdownSec == 0) "" else "開始まで: $countdownSec"
+
+            if (isCountdown) {
+                timerText.text = String.format("%02d:00", finishMin)
+            } else {
+                timerText.text = "00:00"
+            }
+            timerText.setTextColor(Color.WHITE)
+        }
     }
 
     // 音声
     private fun speakTwice(first: String, second: String) {
-
-        val pref = getSharedPreferences("settings", MODE_PRIVATE)
         val volume = pref.getInt("voiceVolume", 100) / 100f
 
         if (volume <= 0f) return
@@ -411,8 +454,7 @@ class MainActivity : AppCompatActivity() {
 
     // カウントダウン
     private fun startCountdown() {
-        val pref = getSharedPreferences("settings", MODE_PRIVATE)
-        var count = pref.getInt("countdownSec", 5)
+        var count = countdownSec
 
         handler.post(object : Runnable {
             override fun run() {
@@ -461,16 +503,25 @@ class MainActivity : AppCompatActivity() {
     // 終了処理
     private fun stopTimerAndShowElapsed() {
         isRunning = false
-        isPaused = false   // ★追加：一時停止状態を解除する
+        isPaused = false
         handler.removeCallbacks(timerRunnable)
 
         val serviceIntent = Intent(this, TimerService::class.java).apply {
             action = TimerService.ACTION_STOP
         }
         startService(serviceIntent)
+        
+        val displaySec: Int
+        if (isCountdown) {
+             // カウントダウン（残り時間）
+             displaySec = (finishMin * 60) - seconds
+         } else {
+             // カウントアップ（経過時間）
+             displaySec = seconds
+        } 
 
-        val min = seconds / 60
-        val sec = seconds % 60
+        val min = displaySec / 60
+        val sec = displaySec % 60
 
         timerText.setTextColor(Color.GREEN)
         timerText.text = String.format("%02d:%02d", min, sec)
@@ -478,13 +529,14 @@ class MainActivity : AppCompatActivity() {
         startBtn.isEnabled = true
         isFinished = true
         stopBtn.text = "リセット"
-        // ★ 終了時に pauseBtn を非表示に戻す
+        
         pauseBtn.visibility = View.INVISIBLE
         pauseBtn.isEnabled = false
         pauseBtn.text = "一時停止"
         pauseBtn.backgroundTintList =
             ColorStateList.valueOf(Color.parseColor("#CCCC00"))
     }
+    
     private fun resetTimer() {
         seconds = 0
 
@@ -495,7 +547,11 @@ class MainActivity : AppCompatActivity() {
         startTime = 0L
         pausedAt = 0L
 
-        timerText.text = "00:00"
+        if (isCountdown) {
+            timerText.text = String.format("%02d:00", finishMin)
+        } else {
+            timerText.text = "00:00"
+        }
         timerText.setTextColor(Color.WHITE)
 
         stopBtn.text = "終了"
@@ -506,12 +562,11 @@ class MainActivity : AppCompatActivity() {
         startBtn.isEnabled = true
         startBtn.text = "開始"
         startBtn.backgroundTintList =
-        ColorStateList.valueOf(Color.parseColor("#0066FF"))
-        // ★ リセット時にも設定からカウントダウン秒数を読み込んで表示を復元する
-        val pref = getSharedPreferences("settings", MODE_PRIVATE)
-        val count = pref.getInt("countdownSec", 5)
-        countdownText.text = if (count == 0) "" else "開始まで: $count"
+            ColorStateList.valueOf(Color.parseColor("#0066FF"))
+
+        countdownText.text = if (countdownSec == 0) "" else "開始まで: $countdownSec"
     }
+
     override fun onDestroy() {
         tts.shutdown()
         super.onDestroy()
@@ -521,7 +576,6 @@ class MainActivity : AppCompatActivity() {
         val root = startBtn.rootView
         val h = root.height.toFloat()
 
-        val pref = getSharedPreferences("settings", MODE_PRIVATE)
         val scale = pref.getFloat("fontScale", 1.0f)
 
         val px = h * 0.25f * scale

@@ -1,14 +1,15 @@
 //
-//  ContentView.swift
-//  SobaTimerApp
+//   ContentView.swift
+//   SobaTimerApp
 //
-//  Created by hiroshi on 2026/09/13.
-//  Updated on 2026/09/29
+//   Created by hiroshi on 2026/09/13.
+//   Updated on 2026-10-25
 //
-//  【追加機能】
-//  ・終了時間（40 / 35 / 30）の選択機能を追加
-//  ・終了時の確認メッセージを省略
-//  ・一時停止機能追加
+//   【追加機能】
+//   ・終了時間（55 / 50 / 45 / 40 / 35 / 30）の選択機能を追加
+//   ・カウントダウン機能（カウントダウンモード / カウントアップモード）を追加
+//   ・終了時の確認メッセージを省略
+//   ・一時停止機能追加
 import SwiftUI
 import AVFoundation
 import Combine
@@ -29,7 +30,7 @@ struct ContentView: View {
     @State private var isPaused = false
     @State private var pausedAt: Date?
     @State private var showPauseConfirm = false   // ★追加：一時停止の確認ダイアログ
-
+    @State private var isFinished = false // ★追加：終了・停止して結果表示中の状態
     @AppStorage("minA") private var minA = 600
     @AppStorage("msgA1") private var msgA1 = "10分経過"
     @AppStorage("msgA2") private var msgA2 = "10分経過です"
@@ -44,8 +45,12 @@ struct ContentView: View {
     
     @AppStorage("countdownSec") private var countdownSec = 5
     @AppStorage("timerFontSize") private var timerFontSize = 100
-    // ★追加：終了時間（40 / 35 / 30）
+    
+    // ★追加・拡張：終了時間（55 / 50 / 45 / 40 / 35 / 30）
     @AppStorage("finishMin") private var finishMin = 40
+    // ★追加：カウントダウンモード（trueなら残り時間を逆算、falseなら経過時間を正方向）
+    @AppStorage("isCountdown") private var isCountdown = false
+    
     @AppStorage("skipConfirm") private var skipConfirm = false   // ← ★追加
     @AppStorage("voiceVolume") private var voiceVolume = 100   // 0〜150
     
@@ -127,7 +132,7 @@ struct ContentView: View {
                                     pauseResumePressed()
                                 } else {
                                     showPauseConfirm = true
-                                }                            
+                                }
                             }
                         }
                         .font(.system(size: geo.size.height * 0.05))
@@ -168,7 +173,7 @@ struct ContentView: View {
                         }
                         .frame(height: geo.size.height * 0.06)   // ← ★高さ固定
                         
-                        Text(timeString(seconds))
+                        Text(displayTimeString())
                             .font(.system(size: geo.size.height * 0.50 * (CGFloat(timerFontSize) / 100)))
                             .monospacedDigit() // ★秒数変化による左右ガタつき防止
                             .foregroundColor(timerColor)
@@ -184,7 +189,6 @@ struct ContentView: View {
             }
             .onReceive(timer) { _ in tick() }
             // タイマー表示時は「横」
-            // 【変更後】（計測中・一時停止中・カウントダウン中でなければリセット処理を行う）
             .onAppear {
                 rotationLock.lockLandscape()
                 if !isRunning && !isPaused {
@@ -208,11 +212,31 @@ struct ContentView: View {
         }
     }
 
+    // 表示する文字列をモード（カウントダウン／アップ）に応じて切り替え
+    func displayTimeString() -> String {
+            let finishSec = finishMin * 60
+            if isCountdown {
+                if isFinished {
+                    let displaySec = max(0, finishSec - seconds)
+                    return timeString(displaySec)
+                } else if !isRunning && !isPaused && !isCountingDown {
+                    // 未開始・リセット時は終了時間を大きく表示
+                    return String(format: "%02d:00", finishMin)
+                } else {
+                    let displaySec = max(0, finishSec - seconds)
+                    return timeString(displaySec)
+                }
+            } else {
+                return timeString(seconds)
+            }
+        }
+
     func startPressed() {
         seconds = 0
         timerColor = .white
         startTime = nil
         isRunning = true
+        isFinished = false // ★ リセット時は未開始状態に戻す
         // ★固定値 5 → 設定値 countdownSec
         countdown = countdownSec
         if countdownSec > 0 {
@@ -224,6 +248,12 @@ struct ContentView: View {
         isRunning = false
         isCountingDown = false
         isPaused = false
+        isFinished = true // ★ 停止時は完了状態にする
+        // ▼ 修正：カウントダウン中であっても、終了時は実際に経過した時間（seconds）を正しく表示する
+        //let displaySec = seconds
+        //let m = displaySec / 60
+        //let s = displaySec % 60
+
         timerColor = .green
     }
 
@@ -254,7 +284,6 @@ struct ContentView: View {
         UIApplication.shared.isIdleTimerDisabled = true
         startTime = Date()
         seconds = 0
-        //isRunning = true
         timerColor = .white
     }
 
@@ -267,11 +296,20 @@ struct ContentView: View {
     func checkMessages() {
         let finishSec = finishMin * 60
 
-        // ★終了時間に応じた残り5分の設定
+        // ★終了時間（55〜30分）に応じた残り5分のアナウンスタイミングを設定
         let remain5Sec: Int
         let remain5Msg1: String
 
         switch finishMin {
+        case 55:
+            remain5Sec = 3000   // 50分
+            remain5Msg1 = "50分経過"
+        case 50:
+            remain5Sec = 2700   // 45分
+            remain5Msg1 = "45分経過"
+        case 45:
+            remain5Sec = 2400   // 40分
+            remain5Msg1 = "40分経過"
         case 40:
             remain5Sec = 2100   // 35分
             remain5Msg1 = "35分経過"
@@ -285,6 +323,7 @@ struct ContentView: View {
             remain5Sec = 2100
             remain5Msg1 = "35分経過"
         }
+
         var messages: [Int: (String, String)] = [
             minA: (msgA1, msgA2),
             minB: (msgB1, msgB2),
@@ -295,7 +334,7 @@ struct ContentView: View {
             finishSec - 240: ("残り4分", "残り4分です"),
             finishSec - 180: ("残り3分", "残り3分です"),
             finishSec - 120: ("残り2分", "残り2分です"),
-            finishSec - 60: ("残り1分", "残り1分です"),
+            finishSec - 60:  ("残り1分", "残り1分です"),
 
             finishSec - 30: ("残り30秒", "残り30秒です"),
             finishSec - 20: ("残り20秒", "残り20秒です"),
@@ -304,9 +343,13 @@ struct ContentView: View {
             finishSec: ("終了", "終了です"),
             3600: ("60分経過しました。終了します。", "お疲れさまでした")
         ]
-        // ★minC は「40分モード」
-        if finishMin == 40 {
+        
+        // 追加の経過アナウンスが必要な場合の処理
+        if finishMin >= 40 {
             messages[minC] = (msgC1, msgC2)
+        }
+        if finishMin >= 50 {
+            messages[2400] = ("40分", "40分経過です")
         }
 
         if seconds == finishSec {
@@ -326,9 +369,9 @@ struct ContentView: View {
         // ★音量0なら完全ミュート
         if voiceVolume == 0 { return }
         let volume = Float(voiceVolume) / 100.0
-        speechManager.speakTwice(first, second,
-                                 volume: volume)
+        speechManager.speakTwice(first, second, volume: volume)
     }
+    
     func pauseResumePressed() {
         if isPaused {
             // ▼ 再開
@@ -351,18 +394,15 @@ struct ContentView: View {
             timerColor = .orange  // ★一時停止 → オレンジ
         }
     }
+    
     func resetPressed() {
-
         seconds = 0
-
         startTime = nil
         pausedAt = nil
-
         isRunning = false
         isPaused = false
         isCountingDown = true
         countdown = countdownSec
-
         timerColor = .white
     }
 }
@@ -390,15 +430,19 @@ struct SettingsView: View {
     @AppStorage("timerFontSize") private var timerFontSize = 100
     @AppStorage("skipConfirm") private var skipConfirm = false   // ← ★追加
     @AppStorage("voiceVolume") private var voiceVolume = 100   // 0〜150
-    // ★追加：終了時間選択
+    
+    // ★追加・拡張：終了時間選択（55 / 50 / 45 / 40 / 35 / 30）
     @AppStorage("finishMin") private var finishMin = 40
+    // ★追加：カウントダウン機能選択
+    @AppStorage("isCountdown") private var isCountdown = false
+
     @State private var showResetAlert = false
     @StateObject private var tester = SpeechManager()
     
     var body: some View {
 
         ScrollView {
-            VStack(alignment: .leading, spacing: 8) {   // ← 24 → 8 に縮める
+            VStack(alignment: .leading, spacing: 12) {
 
                 // フォント倍率
                 VStack(alignment: .leading, spacing: 4) {
@@ -422,13 +466,34 @@ struct SettingsView: View {
                     }
                 }
 
-                // 終了時間選択
+                // タイマーの表示形式（カウントアップ / カウントダウン選択）
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("終了時間　40分　35分　30分")
+                    Text("タイマーの表示形式")
+                        .foregroundColor(.white)
+                        .font(.title3)
+
+                    Picker("表示形式", selection: $isCountdown) {
+                        Text("カウントアップ").tag(false)
+                        Text("カウントダウン").tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                    .tint(.white)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color.gray.opacity(0.85))
+                    )
+                }
+
+                // 終了時間選択（55〜30分）
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("終了時間")
                         .foregroundColor(.white)
                         .font(.title3)
 
                     Picker("終了時間", selection: $finishMin) {
+                        Text("55分").tag(55)
+                        Text("50分").tag(50)
+                        Text("45分").tag(45)
                         Text("40分").tag(40)
                         Text("35分").tag(35)
                         Text("30分").tag(30)
@@ -437,11 +502,7 @@ struct SettingsView: View {
                     .tint(.white)
                     .background(
                         RoundedRectangle(cornerRadius: 6)
-                            .fill(Color.gray.opacity(0.25))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6)
-                            .stroke(Color.gray.opacity(0.7), lineWidth: 1.2)
+                            .fill(Color.gray.opacity(0.85))
                     )
                 }
 
@@ -460,7 +521,7 @@ struct SettingsView: View {
                 Text("経過時間(秒) メッセージ1 メッセージ2")
                     .foregroundColor(.white)
                     .font(.system(size: 18))
-                    .padding(.bottom, 4)   // ← 10 → 4 に縮める
+                    .padding(.bottom, 4)
 
                 // A
                 VStack(alignment: .leading, spacing: 4) {
@@ -501,7 +562,7 @@ struct SettingsView: View {
                         .textFieldStyle(.roundedBorder)
                 }
 
-                // ★ここから音声設定（追加する場所はここ！）
+                // 音声設定
                 VStack(alignment: .leading, spacing: 4) {
                     Text("音量")
                         .foregroundColor(.white)
@@ -520,10 +581,11 @@ struct SettingsView: View {
                             .frame(width: 50)
                     }
                 }
-                // ★ここにテスト再生ボタンを追加（最もわかりやすい位置）
+                
+                // テスト再生ボタン
                 Button(action: {
                     let volume = Float(voiceVolume) / 100.0
-                    tester.speakTwice(msgA1,msgA2,volume: volume)
+                    tester.speakTwice(msgA1, msgA2, volume: volume)
                 }) {
                     Text("テスト再生")
                         .font(.title3)
@@ -538,13 +600,12 @@ struct SettingsView: View {
                 Toggle("終了時の確認メッセージを省略", isOn: $skipConfirm)
                     .foregroundColor(.white)
 
-
                 // 保存ボタン
                 Button(action: saveSettings) {
                     Text("保存")
                         .font(.title2)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)   // ← 詰める
+                        .padding(.vertical, 10)
                         .background(Color.gray.opacity(0.7))
                         .foregroundColor(.white)
                         .cornerRadius(8)
@@ -566,7 +627,7 @@ struct SettingsView: View {
                     Button("キャンセル", role: .cancel) {}
                 }
 
-                Spacer().frame(height: 40)   // ← 80 → 40 に縮める
+                Spacer().frame(height: 40)
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
@@ -574,7 +635,7 @@ struct SettingsView: View {
         .background(Color.black)
         .navigationTitle("設定")
         .toolbarColorScheme(.dark, for: .navigationBar)
-          .onAppear { rotationLock.lockPortrait() }      // 設定画面を開いたら「縦」
+        .onAppear { rotationLock.lockPortrait() }
     }
 
     func saveSettings() {
@@ -595,6 +656,7 @@ struct SettingsView: View {
         msgC2 = "30分経過です"
         countdownSec = 5
         finishMin = 40
+        isCountdown = false
         skipConfirm = false
         voiceVolume = 100
     }
@@ -611,7 +673,8 @@ struct SpecView: View {
 ・フォントを指定可能
 ・カウントダウン秒数を指定可能
 ・音声の ON/OFF が可能
-・終了時間の選択（40/35/30）
+・表示形式（カウントアップ/カウントダウン）の選択
+・終了時間の選択（55/50/45/40/35/30）
 【開始】
 ・準備が整ったようですので開始します
  よーい はじめ
@@ -622,17 +685,12 @@ struct SpecView: View {
 ・設定した30分 30分経過／30分経過です
 
 【残り時間 （終了時間に応じて変動）】
-・35分（残り5分）35分経過／残り5分です
-・36分（残り4分） 残り4分／残り4分です
-・37分（残り3分） 残り3分／残り3分です
-・38分（残り2分） 残り2分／残り2分です
-・39分（残り1分） 残り1分／残り1分です
-・残り30秒 残り30秒／残り30秒です
-・残り20秒 残り20秒／残り20秒です
-・残り10秒 残り10秒／残り10秒です
+・残り5分 アナウンス
+・残り4分 / 3分 / 2分 / 1分 アナウンス
+・残り30秒 / 20秒 / 10秒 アナウンス
 
 【終了】
-・40分 終了／終了です（終了時間に応じて変動）
+・設定時間到達 終了／終了です
 ・60分 60分経過しました。終了します／お疲れさまでした
 
 ----------------------------------------
@@ -652,7 +710,7 @@ sobatimerapp@gmail.com へ連絡ください。
         .background(Color.black)
         .navigationTitle("仕様")
         .toolbarColorScheme(.dark, for: .navigationBar)
-          .onAppear { rotationLock.lockPortrait() }      // 仕様画面を開いたら「縦」
+        .onAppear { rotationLock.lockPortrait() }
     }
 }
 
@@ -681,7 +739,6 @@ class SpeechManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
         let u1 = AVSpeechUtterance(string: first)
         u1.voice = AVSpeechSynthesisVoice(language: "ja-JP")
 
-        // ★安全な範囲にクリップ
         u1.volume = max(0.0, min(volume, 1.5))
         synthesizer.speak(u1)
 
@@ -693,6 +750,4 @@ class SpeechManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
             synthesizer.speak(u2)
         }
     }
-
-    
 }

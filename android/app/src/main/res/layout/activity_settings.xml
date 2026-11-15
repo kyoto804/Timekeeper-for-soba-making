@@ -14,7 +14,7 @@
         <!-- ★ 上余白 -->
         <View
             android:layout_width="match_parent"
-            android:layout_height="12dp"
+            android:layout_height="16dp"
             android:background="#000000" />
 
         <!-- ★ フォント倍率（SeekBar） -->
@@ -31,12 +31,54 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:max="100" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="タイマーの表示形式"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:paddingBottom="8dp" />
+                        
+        <RadioGroup
+            android:id="@+id/timerModeGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="2dp"
+            android:background="#000000"
+            android:gravity="center">
 
-        <!-- ★ 終了時間選択（40 / 35 / 30） -->
+            <RadioButton
+                android:id="@+id/rbCountupMode"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="カウントアップ"
+                android:textColor="#000000"
+                android:textSize="16sp"
+                android:button="@null"
+                android:padding="4dp"
+                android:background="@drawable/radio_segment"
+                android:gravity="center" />
+
+            <RadioButton
+                android:id="@+id/rbCountdownMode"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="カウントダウン"
+                android:textColor="#000000"
+                android:textSize="16sp"
+                android:button="@null"
+                android:padding="4dp"
+                android:background="@drawable/radio_segment"
+                android:gravity="center" />
+        </RadioGroup>
+                <!-- ★ 終了時間選択（40 / 35 / 30） -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="終了時間　40分　35分　30分"
+            android:text="終了時間　55分 50分 45分 40分 35分 30分"
             android:textColor="#FFFFFF"
             android:textSize="18sp"
             android:paddingBottom="8dp" />
@@ -47,8 +89,46 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:padding="2dp"
-            android:background="#404040"
+            android:background="#000000"
             android:gravity="center">
+            <RadioButton
+                android:id="@+id/rb55"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="55分"
+                android:textColor="#000000"
+                android:textSize="16sp"
+                android:button="@null"
+                android:padding="4dp"
+                android:background="@drawable/radio_segment"
+                android:gravity="center" />
+
+            <RadioButton
+                android:id="@+id/rb50"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="50分"
+                android:textColor="#000000"
+                android:textSize="16sp"
+                android:button="@null"
+                android:padding="4dp"
+                android:background="@drawable/radio_segment"
+                android:gravity="center" />
+
+            <RadioButton
+                android:id="@+id/rb45"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="45分"
+                android:textColor="#000000"
+                android:textSize="16sp"
+                android:button="@null"
+                android:padding="4dp"
+                android:background="@drawable/radio_segment"
+                android:gravity="center" />
 
             <RadioButton
                 android:id="@+id/rb40"

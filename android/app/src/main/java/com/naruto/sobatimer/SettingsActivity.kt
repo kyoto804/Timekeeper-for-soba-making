@@ -52,6 +52,17 @@ class SettingsActivity : AppCompatActivity() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
 
+        // 読み込み時（onCreateやonResume内）
+        val timerModeGroup = findViewById<RadioGroup>(R.id.timerModeGroup)
+        // 初期値をカウントアップ（false）に設定
+        val savedIsCountdown = pref.getBoolean("isCountdown", false) 
+        
+        if (savedIsCountdown) {
+            timerModeGroup.check(R.id.rbCountdownMode)
+        } else {
+            timerModeGroup.check(R.id.rbCountupMode)
+        }
+
         countdownSec.setText(pref.getInt("countdownSec", 5).toString())
 
         minA.setText(pref.getInt("minA", 600).toString())
@@ -66,6 +77,9 @@ class SettingsActivity : AppCompatActivity() {
         msgC2.setText(pref.getString("msgC2", "30分経過です"))
 
         when (pref.getInt("finishMin", 40)) {
+            55 -> finishGroup.check(R.id.rb55)
+            50 -> finishGroup.check(R.id.rb50)
+            45 -> finishGroup.check(R.id.rb45)
             40 -> finishGroup.check(R.id.rb40)
             35 -> finishGroup.check(R.id.rb35)
             30 -> finishGroup.check(R.id.rb30)
@@ -120,6 +134,9 @@ class SettingsActivity : AppCompatActivity() {
             val scale = fontScaleSeek.progress / 100f + 0.5f
 
             val selectedFinishMin = when (finishGroup.checkedRadioButtonId) {
+                R.id.rb55 -> 55
+                R.id.rb50 -> 50
+                R.id.rb45 -> 45
                 R.id.rb40 -> 40
                 R.id.rb35 -> 35
                 R.id.rb30 -> 30
@@ -131,7 +148,8 @@ class SettingsActivity : AppCompatActivity() {
                 putFloat("fontScale", scale)
                 putInt("finishMin", selectedFinishMin)
                 putInt("countdownSec", countdownSec.text.toString().toIntOrNull() ?: 5)
-
+                val isCountdown = timerModeGroup.checkedRadioButtonId == R.id.rbCountdownMode
+                putBoolean("isCountdown", isCountdown)
                 putInt("voiceVolume", volumeSeek.progress)
                 putBoolean("skipConfirm", skipConfirmSwitch.isChecked)
 
@@ -161,6 +179,7 @@ class SettingsActivity : AppCompatActivity() {
 
                 putInt("finishMin", 40)
                 putInt("countdownSec", 5)
+                putBoolean("isCountdown", false)
                 putInt("voiceVolume", 100)
                 putBoolean("skipConfirm", false)
 
@@ -180,6 +199,7 @@ class SettingsActivity : AppCompatActivity() {
 
             finishGroup.check(R.id.rb40)
             countdownSec.setText("5")
+            timerModeGroup.check(R.id.rbCountupMode)
             skipConfirmSwitch.isChecked = false
 
             volumeSeek.progress = 100
